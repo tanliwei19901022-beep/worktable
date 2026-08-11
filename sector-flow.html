@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>板块资金流 · 实时</title>
+<style>
+  :root{
+    --bg:#f5f6f8; --card:#fff; --line:#e8eaed; --text:#1f2329; --sub:#8a9099;
+    --up:#e23c3c; --down:#1ba784; --flat:#9aa0a6; --accent:#2f6bff; --shadow:0 1px 3px rgba(0,0,0,.06);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;font-size:14px}
+  .topbar{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:10px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .topbar h1{font-size:16px;margin:0;font-weight:700}
+  .topbar h1 small{font-weight:400;color:var(--sub);font-size:12px;margin-left:6px}
+  .spacer{flex:1}
+  .modes{display:flex;background:#eef0f3;border-radius:9px;padding:3px}
+  .modes button{border:0;background:transparent;padding:6px 12px;border-radius:7px;font-size:13px;color:var(--sub);cursor:pointer}
+  .modes button.on{background:#fff;color:var(--text);font-weight:600;box-shadow:var(--shadow)}
+  .btn{border:1px solid var(--line);background:#fff;border-radius:9px;padding:7px 14px;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;color:var(--text)}
+  .btn:hover{border-color:#cfd4da}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn .spin{width:13px;height:13px;border:2px solid rgba(255,255,255,.5);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .meta{font-size:12px;color:var(--sub);width:100%;text-align:right}
+  .wrap{max-width:980px;margin:0 auto;padding:12px 14px 60px}
+  .sector{background:var(--card);border:1px solid var(--line);border-radius:14px;margin-bottom:10px;box-shadow:var(--shadow);overflow:hidden}
+  .sh{display:flex;align-items:center;gap:10px;padding:13px 14px;cursor:pointer}
+  .sh .rank{width:22px;height:22px;border-radius:6px;background:#eef0f3;color:var(--sub);font-size:12px;display:flex;align-items:center;justify-content:center;flex:0 0 auto;font-weight:700}
+  .sh .rank.top{background:var(--accent);color:#fff}
+  .sh .nm{font-weight:700;font-size:15px;flex:0 0 auto}
+  .sh .amt{color:var(--sub);font-size:12px;margin-left:2px}
+  .sh .sp{flex:1}
+  .badge{padding:3px 8px;border-radius:7px;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;flex:0 0 auto}
+  .badge.sm{font-size:12px;padding:2px 7px}
+  .up{color:var(--up)} .down{color:var(--down)} .flat{color:var(--flat)}
+  .bg-up{background:rgba(226,60,60,.1)} .bg-down{background:rgba(27,167,132,.1)}
+  .chev{flex:0 0 auto;color:var(--sub);transition:transform .2s;font-size:12px}
+  .sector.open .chev{transform:rotate(90deg)}
+  .sbody{display:none;border-top:1px solid var(--line);padding:12px 14px;background:#fcfcfd}
+  .sector.open .sbody{display:block}
+  .flowgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:12px}
+  .fc{background:#f6f7f9;border-radius:10px;padding:9px 6px;text-align:center}
+  .fc .k{font-size:11px;color:var(--sub)}
+  .fc .v{font-size:13px;font-weight:700;margin-top:3px;font-variant-numeric:tabular-nums}
+  .tbl{width:100%;border-collapse:collapse;font-size:13px}
+  .tbl th{text-align:right;color:var(--sub);font-weight:500;font-size:12px;padding:6px 8px;border-bottom:1px solid var(--line)}
+  .tbl th:first-child,.tbl td:first-child{text-align:left}
+  .tbl td{padding:7px 8px;border-bottom:1px solid #f0f1f3;text-align:right;font-variant-numeric:tabular-nums}
+  .tbl tr:last-child td{border-bottom:0}
+  .stk{color:var(--text);cursor:pointer;font-weight:600}
+  .stk:hover{color:var(--accent);text-decoration:underline}
+  .empty{text-align:center;color:var(--sub);padding:40px 0}
+  /* modal */
+  .mask{position:fixed;inset:0;background:rgba(15,18,22,.5);display:none;z-index:50;align-items:flex-end;justify-content:center}
+  .mask.show{display:flex}
+  @media(min-width:680px){.mask{align-items:center}}
+  .modal{background:#fff;width:100%;max-width:760px;border-radius:16px 16px 0 0;max-height:92vh;overflow:auto}
+  @media(min-width:680px){.modal{border-radius:16px}}
+  .mh{display:flex;align-items:center;padding:14px 16px;border-bottom:1px solid var(--line);position:sticky;top:0;background:#fff;z-index:2}
+  .mh .t{font-weight:700;font-size:15px;flex:1}
+  .mh .x{border:0;background:#f0f1f3;border-radius:8px;width:30px;height:30px;font-size:16px;cursor:pointer;color:var(--sub)}
+  .mb{padding:8px 12px 18px}
+  #kline-svg{width:100%;height:auto;display:block;touch-action:none}
+  .hint{font-size:11px;color:var(--sub);text-align:center;padding:4px 0 8px}
+  .toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%);background:#1f2329;color:#fff;padding:9px 16px;border-radius:10px;font-size:13px;z-index:99;opacity:0;transition:opacity .25s;pointer-events:none;max-width:90vw;text-align:center}
+  .toast.show{opacity:1}
+  @media(max-width:560px){
+    .flowgrid{grid-template-columns:repeat(3,1fr)}
+    .sh .nm{font-size:14px}
+    .topbar h1{font-size:15px}
+  }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <h1>板块资金流<small>实时 · 东方财富</small></h1>
+  <div class="modes" id="modes">
+    <button data-m="industry" class="on">行业</button>
+    <button data-m="concept">概念</button>
+    <button data-m="region">地区</button>
+  </div>
+  <div class="spacer"></div>
+  <button class="btn primary" id="refresh"><span id="rspin"></span><span id="rtxt">刷新</span></button>
+  <div class="meta" id="meta">—</div>
+</div>
+
+<div class="wrap">
+  <div id="list"><div class="empty">加载中…</div></div>
+</div>
+
+<!-- K线弹窗 -->
+<div class="mask" id="kmask">
+  <div class="modal">
+    <div class="mh"><div class="t" id="kline-title">K线</div><button class="x" id="kclose">×</button></div>
+    <div class="mb">
+      <div class="hint">滚轮缩放 · 最新价在右</div>
+      <svg id="kline-svg" viewBox="0 0 1000 560" preserveAspectRatio="xMidYMid meet"></svg>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+const FS = {industry:'m:90+t:2', concept:'m:90+t:3', region:'m:90+t:1'};
+const SECTOR_FIELDS = 'f12,f14,f3,f6,f62,f184,f66,f72,f78,f84';
+const STOCK_FIELDS = 'f12,f14,f3,f6,f62,f184';
+let MODE = 'industry';
+let SECTORS = [];          // 当前板块列表
+const OPEN = new Set();    // 已展开板块代码
+const CONS = {};           // code -> 成分股数组
+
+/* ---------- 工具 ---------- */
+function $(s){return document.querySelector(s);}
+function el(tag,cls,html){const e=document.createElement(tag);if(cls)e.className=cls;if(html!=null)e.innerHTML=html;return e;}
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2600);}
+function fmtAmt(v){v=+v||0;const a=Math.abs(v);if(a>=1e8)return (v/1e8).toFixed(2)+'亿';if(a>=1e4)return (v/1e4).toFixed(2)+'万';return v.toFixed(0);}
+function fmtFlow(v){v=+v||0;return (v>0?'+':'')+(v/1e8).toFixed(2)+'亿';}
+function pct(v){v=+v||0;return (v>0?'+':'')+v.toFixed(2)+'%';}
+function ccls(v){return v>0?'up':(v<0?'down':'flat');}
+function cbg(v){return v>0?'bg-up':(v<0?'bg-down':'');}
+function toSecid(code){return /^(6|9)/.test(code)?'1.'+code:'0.'+code;}
+
+/* ---------- JSONP（东方财富 push2 支持 cb 回调，绕过浏览器跨域） ---------- */
+function emJsonp(url, timeout){
+  return new Promise((resolve,reject)=>{
+    const cb = 'jp'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+    const sep = url.indexOf('?')>=0?'&':'?';
+    const s = document.createElement('script');
+    let done=false;
+    const timer = setTimeout(()=>{ if(!done){done=true;cleanup();reject(new Error('请求超时'));} }, timeout||9000);
+    function cleanup(){clearTimeout(timer);try{delete window[cb];}catch(e){}if(s.parentNode)s.parentNode.removeChild(s);}
+    window[cb] = (d)=>{ if(done)return;done=true;cleanup();resolve(d); };
+    s.onerror = ()=>{ if(done)return;done=true;cleanup();reject(new Error('网络错误')); };
+    s.src = url+sep+'cb='+cb;
+    document.body.appendChild(s);
+  });
+}
+
+/* ---------- 取数 ---------- */
+async function fetchSectors(){
+  const url = `https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=10&po=1&np=1&fltt=2&invt=2&fs=${FS[MODE]}&fid=f6&fields=${SECTOR_FIELDS}`;
+  const j = await emJsonp(url);
+  return (j && j.data && j.data.diff) || [];
+}
+async function fetchCons(bk){
+  const url = `https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=10&po=1&np=1&fltt=2&invt=2&fs=b:${bk}&fid=f6&fields=${STOCK_FIELDS}`;
+  const j = await emJsonp(url);
+  return (j && j.data && j.data.diff) || [];
+}
+// K线改用腾讯财经接口（CORS 开放，浏览器直连 fetch），见 openKline()
+
+
+/* ---------- 渲染 ---------- */
+function renderList(){
+  const box = $('#list');
+  if(!SECTORS.length){ box.innerHTML='<div class="empty">暂无数据</div>'; return; }
+  box.innerHTML='';
+  SECTORS.forEach((s,i)=>{
+    const code=s.f12, open=OPEN.has(code);
+    const card=el('div','sector'+(open?' open':''));
+    card.dataset.code=code;
+    const rk = el('div','rank'+(i<3?' top':''), String(i+1));
+    const nm = el('div','nm', s.f14+' <span class="amt">'+fmtAmt(s.f6)+'</span>');
+    const sp = el('div','sp');
+    const bp = el('span','badge '+ccls(s.f3)+(s.f3>0?' bg-up':s.f3<0?' bg-down':''), pct(s.f3));
+    const bf = el('span','badge sm '+ccls(s.f62)+(s.f62>0?' bg-up':s.f62<0?' bg-down':''), fmtFlow(s.f62));
+    const chev = el('div','chev','▶');
+    const head=el('div','sh');
+    head.append(rk,nm,sp,bp,bf,chev);
+    card.appendChild(head);
+
+    const body=el('div','sbody');
+    // 资金流向明细
+    const fg=el('div','flowgrid');
+    [['主力净流入',s.f62],['超大单',s.f66],['大单',s.f72],['中单',s.f78],['小单',s.f84]].forEach(([k,v])=>{
+      const c=el('div','fc');c.append(el('div','k',k),el('div','v '+ccls(v),fmtFlow(v)));fg.appendChild(c);
+    });
+    body.appendChild(fg);
+    // 成分股表
+    const t=el('table','tbl');
+    t.innerHTML='<thead><tr><th>个股（点名称看K线）</th><th>涨跌幅</th><th>成交额</th><th>主力净流入</th></tr></thead>';
+    const tb=el('tbody');
+    const rows = CONS[code] || [];
+    if(rows.length){
+      rows.forEach((x,k)=>{
+        const tr=el('tr');
+        const name=el('td');const a=el('span','stk',(k+1)+'. '+x.f14);a.dataset.secid=toSecid(x.f12);a.dataset.name=x.f14;name.appendChild(a);
+        tr.append(name,
+          el('td',ccls(x.f3),pct(x.f3)),
+          el('td',null,fmtAmt(x.f6)),
+          el('td',ccls(x.f62),fmtFlow(x.f62)));
+        tb.appendChild(tr);
+      });
+    }else{
+      tb.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--sub)">点击板块展开后将加载成分股…</td></tr>';
+    }
+    t.appendChild(tb);
+    body.appendChild(t);
+    card.appendChild(body);
+
+    head.addEventListener('click',()=>toggle(code));
+    box.appendChild(card);
+  });
+}
+
+async function toggle(code){
+  if(OPEN.has(code)){
+    OPEN.delete(code);
+  }else{
+    OPEN.add(code);
+    if(!CONS[code]){
+      try{ CONS[code]=await fetchCons(code); }
+      catch(e){ CONS[code]=[]; toast('成分股加载失败：'+e.message); }
+    }
+  }
+  renderList();
+}
+
+/* ---------- 刷新 ---------- */
+let loading=false;
+async function refresh(){
+  if(loading) return;
+  loading=true;
+  $('#rspin').className='spin'; $('#rtxt').textContent='刷新中';
+  try{
+    SECTORS = await fetchSectors();
+    // 重新拉取已展开板块的成分股
+    for(const code of OPEN){ try{ CONS[code]=await fetchCons(code); }catch(e){} }
+    renderList();
+    const now=new Date();
+    const p=n=>String(n).padStart(2,'0');
+    $('#meta').textContent = '更新于 '+now.getFullYear()+'-'+p(now.getMonth()+1)+'-'+p(now.getDate())+' '+p(now.getHours())+':'+p(now.getMinutes())+':'+p(now.getSeconds())+' · 每60秒自动刷新';
+  }catch(e){
+    $('#list').innerHTML='<div class="empty">加载失败：'+(e.message||e)+'<br>请检查网络后点刷新重试</div>';
+    $('#meta').textContent='加载失败';
+  }finally{
+    loading=false;
+    $('#rspin').className=''; $('#rtxt').textContent='刷新';
+  }
+}
+
+/* ---------- K线 ---------- */
+const KL={bars:[],visible:60,name:''};
+async function openKline(code,name){
+  const tc = /^(6|9)/.test(code)?'sh'+code:'sz'+code;
+  try{
+    const url = `https://web.ifzq.gtimg.cn/appstock/app/fqkline/get?param=${tc},day,,,120,qfq`;
+    const r = await fetch(url, {cache:'no-store'});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const j = await r.json();
+    const obj = j.data && j.data[tc];
+    const arr = (obj && (obj.qfqday || obj.day)) || [];
+    KL.bars = arr.map(a=>({d:a[0], o:+a[1], c:+a[2], h:+a[3], l:+a[4], v:+a[5]||0, pct: a[1]? (a[2]-a[1])/a[1]*100 : 0}));
+    if(!KL.bars.length){ toast('无K线数据'); return; }
+    KL.visible = Math.min(60, KL.bars.length);
+    KL.name = name;
+    $('#kline-title').textContent = name+' · 日K';
+    $('#kmask').classList.add('show');
+    drawKline();
+  }catch(e){ toast('K线加载失败：'+(e.message||e)); }
+}
+function drawKline(){
+  const bars=KL.bars,n=bars.length;
+  const vis=KL.visible=Math.max(20,Math.min(n,KL.visible));
+  const start=Math.max(0,n-vis);
+  const view=bars.slice(start);
+  const W=1000,H=560,padL=10,padR=10,padT=18,priceTop=padT,priceBot=400,volTop=432,volBot=540;
+  let hi=-Infinity,lo=Infinity,vmax=0;
+  view.forEach(b=>{hi=Math.max(hi,b.h);lo=Math.min(lo,b.l);vmax=Math.max(vmax,b.v);});
+  const range=(hi-lo)||1; hi+=range*0.06; lo-=range*0.06;
+  const cw=(W-padL-padR)/view.length, bw=Math.max(1.2,cw*0.66);
+  let svg='';
+  // 网格 + 价格刻度
+  for(let g=0;g<=4;g++){
+    const yy=priceTop+(priceBot-priceTop)*g/4;
+    const val=hi-(hi-lo)*g/4;
+    svg+=`<line x1="${padL}" y1="${yy}" x2="${W-padR}" y2="${yy}" stroke="#eef0f3"/>`;
+    svg+=`<text x="${padL+2}" y="${yy-3}" fill="#9aa0a6" font-size="11">${val.toFixed(2)}</text>`;
+  }
+  view.forEach((b,i)=>{
+    const x=padL+i*cw+cw/2;
+    const yO=priceTop+(hi-b.o)/(hi-lo)*(priceBot-priceTop);
+    const yC=priceTop+(hi-b.c)/(hi-lo)*(priceBot-priceTop);
+    const yH=priceTop+(hi-b.h)/(hi-lo)*(priceBot-priceTop);
+    const yL=priceTop+(hi-b.l)/(hi-lo)*(priceBot-priceTop);
+    const col=b.c>=b.o?'#e23c3c':'#1ba784';
+    svg+=`<line x1="${x}" y1="${yH}" x2="${x}" y2="${yL}" stroke="${col}" stroke-width="1"/>`;
+    const yo=Math.min(yO,yC),bh=Math.max(1,Math.abs(yC-yO));
+    svg+=`<rect x="${x-bw/2}" y="${yo}" width="${bw}" height="${bh}" fill="${col}"/>`;
+    const vy=volTop+(1-b.v/vmax)*(volBot-volTop);
+    svg+=`<rect x="${x-bw/2}" y="${vy}" width="${bw}" height="${volBot-vy}" fill="${col}" opacity="0.55"/>`;
+  });
+  // 最新价标签
+  const last=view[view.length-1];
+  const yLast=priceTop+(hi-last.c)/(hi-lo)*(priceBot-priceTop);
+  svg+=`<text x="${W-padR}" y="${yLast+4}" fill="${last.c>=last.o?'#e23c3c':'#1ba784'}" font-size="13" text-anchor="end" font-weight="700">${last.c.toFixed(2)}</text>`;
+  $('#kline-svg').innerHTML=svg;
+}
+
+/* ---------- 事件 ---------- */
+$('#refresh').addEventListener('click',refresh);
+$('#modes').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b)return;
+  MODE=b.dataset.m;
+  [...$('#modes').children].forEach(x=>x.classList.toggle('on',x===b));
+  OPEN.clear(); for(const k in CONS)delete CONS[k];
+  refresh();
+});
+document.addEventListener('click',e=>{
+  const s=e.target.closest('.stk');
+  if(s){ openKline(s.dataset.code,s.dataset.name); return; }
+  if(e.target.id==='kmask') $('#kmask').classList.remove('show');
+});
+$('#kclose').addEventListener('click',()=>$('#kmask').classList.remove('show'));
+$('#kline-svg').addEventListener('wheel',e=>{
+  e.preventDefault();
+  if(e.deltaY<0) KL.visible=Math.max(20,Math.floor(KL.visible*0.8));
+  else KL.visible=Math.min(KL.bars.length,Math.ceil(KL.visible*1.25));
+  drawKline();
+},{passive:false});
+
+/* ---------- 启动 ---------- */
+refresh();
+setInterval(()=>{ if(!loading) refresh(); }, 60000);
+</script>
+</body>
+</html>
