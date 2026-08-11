@@ -1,0 +1,1590 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#0f2d5c">
+<title>全球金融盘面台</title>
+<style>
+:root{
+  --bg:#f4f6fa; --card:#ffffff; --ink:#131a26; --ink2:#5b6779; --ink3:#8b97a8;
+  --line:#e4e9f0; --line2:#eef2f7;
+  --brand:#0f2d5c; --brand2:#1e5bbf; --brand-soft:#eaf1fd;
+  --up:#e0342a; --down:#0e9e63; --flat:#8b97a8;
+  --hi:#e0342a; --hi-bg:#fdecea; --mid:#e08700; --mid-bg:#fff5e6; --low:#5b6779; --low-bg:#f1f4f8;
+  --r:14px; --r2:10px;
+  --sh:0 1px 2px rgba(16,32,64,.05), 0 6px 18px rgba(16,32,64,.05);
+}
+body.inv{ --up:#0e9e63; --down:#e0342a; }
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+  font-size:15px; line-height:1.5; -webkit-font-smoothing:antialiased;
+  padding-bottom:calc(68px + env(safe-area-inset-bottom));
+}
+button,input,select,textarea{font-family:inherit;font-size:16px;color:inherit}
+button{cursor:pointer;border:none;background:none}
+.wrap{max-width:1180px;margin:0 auto;padding:0 14px}
+.hide{display:none !important}
+
+/* ---------- Header ---------- */
+.hd{background:linear-gradient(135deg,#0f2d5c,#1a4a8f 58%,#1e5bbf);color:#fff;padding:calc(12px + env(safe-area-inset-top)) 0 14px}
+.hd-in{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:9px;margin-right:auto;min-width:0}
+.logo svg{flex:none}
+.logo h1{font-size:18px;margin:0;font-weight:650;letter-spacing:.3px;white-space:nowrap}
+.logo .sub{font-size:11px;opacity:.72;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hbtns{display:flex;gap:7px;flex-wrap:wrap}
+.hb{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.14);color:#fff;
+  border:1px solid rgba(255,255,255,.2);padding:0 11px;height:36px;border-radius:9px;font-size:13px;font-weight:520;white-space:nowrap}
+.hb:active{background:rgba(255,255,255,.28)}
+.hb svg{flex:none}
+.hb.primary{background:#fff;color:var(--brand);border-color:#fff;font-weight:620}
+
+/* ---------- Sync bar ---------- */
+.syncbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px;
+  background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.14);border-radius:9px;padding:7px 11px;margin-top:11px;color:rgba(255,255,255,.9)}
+.dot{width:7px;height:7px;border-radius:50%;background:#4ade80;flex:none;box-shadow:0 0 0 3px rgba(74,222,128,.22)}
+.dot.warn{background:#fbbf24;box-shadow:0 0 0 3px rgba(251,191,36,.22)}
+.dot.err{background:#f87171;box-shadow:0 0 0 3px rgba(248,113,113,.22)}
+.dot.live{animation:pulse 1.9s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.syncbar .sep{opacity:.3}
+
+/* ---------- Today panel ---------- */
+.today{background:var(--card);border-radius:var(--r);box-shadow:var(--sh);margin-top:14px;overflow:hidden;border:1px solid var(--line)}
+.today-hd{display:flex;align-items:center;gap:8px;padding:13px 15px 11px;border-bottom:1px solid var(--line2)}
+.today-hd h2{margin:0;font-size:15px;font-weight:650;letter-spacing:.2px}
+.badge{background:var(--hi);color:#fff;font-size:11px;font-weight:700;border-radius:20px;padding:2px 8px;min-width:20px;text-align:center}
+.badge.zero{background:var(--down)}
+.today-list{padding:5px 8px 9px}
+.ti{display:flex;align-items:flex-start;gap:10px;padding:10px 8px;border-radius:var(--r2)}
+.ti+.ti{border-top:1px solid var(--line2)}
+.ti-ic{flex:none;width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;margin-top:1px}
+.ti-ic.hi{background:var(--hi-bg);color:var(--hi)} .ti-ic.mid{background:var(--mid-bg);color:var(--mid)} .ti-ic.low{background:var(--low-bg);color:var(--low)}
+.ti-b{flex:1;min-width:0}
+.ti-t{font-size:14px;font-weight:560;line-height:1.4}
+.ti-m{font-size:12px;color:var(--ink3);margin-top:2px;display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.ti-act{flex:none;height:32px;padding:0 12px;border-radius:8px;background:var(--brand-soft);color:var(--brand2);font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:4px}
+.ti-act:active{background:#d8e5fb}
+.ti.over .ti-t{color:var(--hi)}
+.empty{padding:26px 14px;text-align:center;color:var(--ink3);font-size:13.5px}
+.empty svg{display:block;margin:0 auto 8px;opacity:.4}
+
+/* ---------- Tabs ---------- */
+.tabs{display:flex;gap:6px;margin:16px 0 12px;background:#e8edf5;padding:4px;border-radius:12px}
+.tab{flex:1;height:40px;border-radius:9px;font-size:14px;font-weight:580;color:var(--ink2);display:flex;align-items:center;justify-content:center;gap:6px}
+.tab.on{background:#fff;color:var(--brand);box-shadow:0 1px 3px rgba(16,32,64,.1)}
+.tab svg{flex:none}
+
+/* ---------- Cards ---------- */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);margin-bottom:14px;overflow:hidden}
+.card-hd{display:flex;align-items:center;gap:9px;padding:13px 15px;border-bottom:1px solid var(--line2);flex-wrap:wrap}
+.card-hd h3{margin:0;font-size:14.5px;font-weight:640;display:flex;align-items:center;gap:7px}
+.card-hd .grow{margin-left:auto}
+.pill{font-size:10.5px;font-weight:700;letter-spacing:.4px;padding:2px 7px;border-radius:5px;background:var(--low-bg);color:var(--ink2)}
+.pill.live{background:#e7f7ef;color:#0e9e63;display:inline-flex;align-items:center;gap:4px}
+.pill.live::before{content:"";width:5px;height:5px;border-radius:50%;background:#0e9e63;animation:pulse 1.9s infinite}
+.pill.brief{background:var(--brand-soft);color:var(--brand2)}
+.pill.cache{background:var(--mid-bg);color:var(--mid)}
+
+/* ---------- Quote table ---------- */
+.qt{width:100%;border-collapse:collapse}
+.qt th{font-size:11.5px;font-weight:600;color:var(--ink3);text-align:right;padding:8px 15px;background:#fafbfd;border-bottom:1px solid var(--line2);white-space:nowrap}
+.qt th:first-child{text-align:left}
+.qt td{padding:10px 15px;border-bottom:1px solid var(--line2);text-align:right;font-size:14px;white-space:nowrap}
+.qt tr:last-child td{border-bottom:none}
+.qt td:first-child{text-align:left}
+.qn{font-weight:560;font-size:14px}
+.qc{font-size:11px;color:var(--ink3);margin-top:1px;font-variant-numeric:tabular-nums}
+.qp{font-variant-numeric:tabular-nums;font-weight:600}
+.qg{font-variant-numeric:tabular-nums;font-weight:650;font-size:13.5px}
+.up{color:var(--up)} .down{color:var(--down)} .flat{color:var(--flat)}
+.spark{vertical-align:middle}
+.qt tr.rowsel{background:#fafcff}
+
+/* ---------- News ---------- */
+.filters{display:flex;gap:6px;flex-wrap:wrap;padding:11px 15px;border-bottom:1px solid var(--line2);background:#fafbfd}
+.fbtn{height:32px;padding:0 12px;border-radius:8px;font-size:13px;font-weight:540;background:#fff;border:1px solid var(--line);color:var(--ink2)}
+.fbtn.on{background:var(--brand);color:#fff;border-color:var(--brand)}
+.nlist{padding:4px 0}
+.ni{display:flex;gap:11px;padding:12px 15px;border-bottom:1px solid var(--line2);align-items:flex-start}
+.ni:last-child{border-bottom:none}
+.ni.done{opacity:.5}
+.ni.done .ni-t{text-decoration:line-through}
+.lv{flex:none;width:3px;align-self:stretch;border-radius:3px;min-height:38px}
+.lv.high{background:var(--hi)} .lv.mid{background:var(--mid)} .lv.low{background:#c3cbd8}
+.ni-b{flex:1;min-width:0}
+.ni-t{font-size:14.5px;font-weight:540;line-height:1.45;word-break:break-word}
+.ni-m{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:5px;font-size:11.5px;color:var(--ink3)}
+.tag{background:var(--brand-soft);color:var(--brand2);padding:1.5px 7px;border-radius:5px;font-size:11px;font-weight:560}
+.lvtag{padding:1.5px 7px;border-radius:5px;font-size:11px;font-weight:680}
+.lvtag.high{background:var(--hi-bg);color:var(--hi)} .lvtag.mid{background:var(--mid-bg);color:var(--mid)} .lvtag.low{background:var(--low-bg);color:var(--low)}
+.ni-a{flex:none;display:flex;flex-direction:column;gap:5px}
+.mini{width:44px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:#f1f4f8;color:var(--ink2)}
+.mini:active{background:#e2e8f0}
+.mini.ok{background:#e7f7ef;color:var(--down)}
+.mini.del:active{background:var(--hi-bg);color:var(--hi)}
+
+/* ---------- Review ---------- */
+.rv-grid{display:grid;grid-template-columns:1fr 1fr;gap:0}
+.rv-col{padding:0}
+.rv-col+.rv-col{border-left:1px solid var(--line2)}
+.rv-h{display:flex;align-items:center;gap:7px;padding:11px 15px 9px;font-size:13.5px;font-weight:650;border-bottom:1px solid var(--line2)}
+.rv-h.opp{color:var(--down)} .rv-h.risk{color:var(--hi)}
+.rv-h .grow{margin-left:auto}
+.addmini{width:28px;height:28px;border-radius:7px;background:#f1f4f8;display:flex;align-items:center;justify-content:center;color:var(--ink2)}
+.addmini:active{background:#e2e8f0}
+.rli{display:flex;gap:9px;align-items:flex-start;padding:9px 15px;border-bottom:1px solid var(--line2);font-size:14px;line-height:1.45}
+.rli:last-child{border-bottom:none}
+.ck{flex:none;width:19px;height:19px;border-radius:6px;border:1.8px solid #c3cbd8;margin-top:2px;display:flex;align-items:center;justify-content:center;background:#fff}
+.ck.on{background:var(--down);border-color:var(--down);color:#fff}
+.rli.on span.txt{text-decoration:line-through;color:var(--ink3)}
+.rli .txt{flex:1;word-break:break-word}
+.rli .x{flex:none;color:var(--ink3);width:26px;height:26px;display:flex;align-items:center;justify-content:center;border-radius:6px}
+.note{width:100%;border:none;padding:12px 15px;resize:vertical;min-height:92px;font-size:15px;line-height:1.6;background:#fff;outline:none;display:block}
+.note::placeholder{color:var(--ink3)}
+.hist{padding:0}
+.hi-row{padding:11px 15px;border-bottom:1px solid var(--line2)}
+.hi-row:last-child{border-bottom:none}
+.hi-d{font-size:12.5px;font-weight:650;color:var(--brand2);margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.hi-s{font-size:13px;color:var(--ink2);line-height:1.5}
+.cnt{font-size:11px;font-weight:600;color:var(--ink3);background:#f1f4f8;padding:1px 6px;border-radius:5px}
+
+/* ---------- Modal ---------- */
+.mask{position:fixed;inset:0;background:rgba(13,22,40,.5);z-index:90;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(2px)}
+.modal{background:#fff;border-radius:16px;width:100%;max-width:520px;max-height:88vh;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.m-hd{display:flex;align-items:center;padding:15px 17px;border-bottom:1px solid var(--line2);position:sticky;top:0;background:#fff;z-index:2}
+.m-hd h3{margin:0;font-size:16px;font-weight:650}
+.m-hd .x{margin-left:auto;width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--ink2);background:#f1f4f8}
+.m-bd{padding:15px 17px}
+.fld{margin-bottom:13px}
+.fld label{display:block;font-size:12.5px;font-weight:600;color:var(--ink2);margin-bottom:5px}
+.fld input,.fld select,.fld textarea{width:100%;height:46px;border:1.5px solid var(--line);border-radius:10px;padding:0 12px;background:#fff;outline:none}
+.fld textarea{height:auto;min-height:88px;padding:11px 12px;resize:vertical;line-height:1.55;font-size:15px}
+.fld input:focus,.fld select:focus,.fld textarea:focus{border-color:var(--brand2)}
+.seg{display:flex;gap:7px}
+.seg button{flex:1;height:44px;border-radius:10px;border:1.5px solid var(--line);background:#fff;font-size:14px;font-weight:560;color:var(--ink2)}
+.seg button.on{border-color:var(--brand2);background:var(--brand-soft);color:var(--brand2);font-weight:680}
+.seg button.on.hi{border-color:var(--hi);background:var(--hi-bg);color:var(--hi)}
+.seg button.on.md{border-color:var(--mid);background:var(--mid-bg);color:var(--mid)}
+.m-ft{display:flex;gap:9px;padding:13px 17px calc(15px + env(safe-area-inset-bottom));border-top:1px solid var(--line2);position:sticky;bottom:0;background:#fff}
+.btn{flex:1;height:48px;border-radius:11px;font-size:15px;font-weight:620;display:flex;align-items:center;justify-content:center;gap:6px}
+.btn.pri{background:var(--brand);color:#fff}
+.btn.pri:active{background:#0a2148}
+.btn.gh{background:#f1f4f8;color:var(--ink2)}
+.btn.dg{background:var(--hi);color:#fff}
+.hintbox{background:#fafbfd;border:1px solid var(--line);border-radius:10px;padding:11px 12px;font-size:12.5px;color:var(--ink2);line-height:1.6;margin-bottom:13px}
+.hintbox b{color:var(--ink)}
+.hintbox code{background:#eef2f7;padding:1px 5px;border-radius:4px;font-size:11.5px;font-family:ui-monospace,Menlo,Consolas,monospace}
+
+/* ---------- Toast ---------- */
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom));background:#131a26;color:#fff;
+  padding:11px 18px;border-radius:11px;font-size:14px;z-index:200;box-shadow:0 8px 24px rgba(0,0,0,.28);max-width:88vw;text-align:center;
+  opacity:0;pointer-events:none;transition:opacity .22s,transform .22s}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(-6px)}
+
+/* ---------- Backup nudge ---------- */
+.nudge{display:flex;align-items:center;gap:9px;background:var(--mid-bg);border:1px solid #f5dfb0;color:#8a5b00;
+  border-radius:11px;padding:10px 13px;font-size:13px;margin-top:14px}
+.nudge button{margin-left:auto;flex:none;background:#8a5b00;color:#fff;height:32px;padding:0 13px;border-radius:8px;font-size:12.5px;font-weight:620}
+
+/* ---------- Bottom tabbar (mobile) ---------- */
+.tabbar{display:none;position:fixed;left:0;right:0;bottom:0;z-index:80;background:rgba(255,255,255,.97);
+  backdrop-filter:blur(12px);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+.tabbar-in{display:flex}
+.tb{flex:1;height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:10.5px;color:var(--ink3);font-weight:560}
+.tb.on{color:var(--brand2)}
+.tb .n{position:relative}
+.tb .bdg{position:absolute;top:-3px;right:-9px;background:var(--hi);color:#fff;font-size:9px;font-weight:700;border-radius:9px;padding:0 4px;min-width:14px;height:14px;line-height:14px;text-align:center}
+
+.foot{text-align:center;font-size:11.5px;color:var(--ink3);padding:8px 0 24px;line-height:1.7}
+
+/* ---------- K 线弹窗 ---------- */
+.kl-info{font-size:13px;color:var(--ink2);margin-bottom:10px;line-height:1.5}
+.kl-info b{color:var(--ink)}
+.kl-canvas{background:#fff;border:1px solid var(--line);border-radius:var(--r2);overflow:hidden;min-height:320px}
+.kl-canvas svg{display:block;touch-action:none}
+.kl-bar{display:flex;align-items:center;gap:8px;margin-top:11px}
+.kl-btn{flex:none;height:38px;padding:0 12px;border-radius:9px;background:#f1f4f8;color:var(--ink2);font-size:13.5px;font-weight:560}
+.kl-btn:active{background:#e2e8f0}
+.kl-bar input[type=range]{accent-color:var(--brand2);height:38px;flex:1}
+.kl-hint{font-size:11.5px;color:var(--ink3);margin-top:8px;line-height:1.5}
+
+/* ---------- 中国恐慌指数 ---------- */
+.fear-card{background:linear-gradient(180deg,#fff,#fbfdff)}
+.fear-card .card-hd h3{color:var(--hi)}
+.fear-row{display:flex;align-items:center;gap:16px;padding:14px 15px}
+.fear-side{flex:1;min-width:0}
+.fear-cap{font-size:13px;color:var(--ink2);line-height:1.55}
+.fear-spark{margin:8px 0 2px}
+.fear-tip{font-size:11.5px;color:var(--ink3);margin-top:6px;line-height:1.5}
+
+/* ---------- 板块市场卡（亚太 / 欧美） ---------- */
+.card.mkt.focus{border-color:var(--brand2);box-shadow:0 0 0 2px var(--brand-soft),var(--sh)}
+.mkt-flow{display:flex;align-items:center;justify-content:space-between;padding:11px 15px;background:#fafbfd;border-bottom:1px solid var(--line2);font-size:13.5px;color:var(--ink2)}
+.mkt-flow b{font-size:15px;font-variant-numeric:tabular-nums}
+.sec-list{padding:4px 0}
+.sec{padding:11px 15px;border-bottom:1px solid var(--line2)}
+.sec:last-child{border-bottom:none}
+.sec-h{display:flex;align-items:baseline;justify-content:space-between;gap:8px;font-size:13.5px;font-weight:600}
+.sec-h span:first-child{color:var(--ink)}
+.sec-chg{font-variant-numeric:tabular-nums;font-weight:650;font-size:13px}
+.sec-flow{font-size:11.5px;color:var(--ink3);margin-top:3px}
+.sec-ld{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
+.ld{background:#f1f4f8;border-radius:7px;padding:2px 8px;font-size:12px;color:var(--ink2);font-variant-numeric:tabular-nums}
+.ld i{font-style:normal;font-weight:600;margin-left:3px}
+.mkt-note{padding:11px 15px;font-size:12.5px;color:var(--ink3);line-height:1.55;border-top:1px solid var(--line2)}
+
+/* 数据日期条 + 新鲜度 */
+.datebar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 14px;background:var(--card);border:1px solid var(--line);border-radius:12px;margin-bottom:12px;font-size:12px}
+.datebar .pill{margin:0}
+.pill.today{background:#e7f7ef;color:#0e9e63;border:1px solid #b6e8d2}
+.pill.stale{background:#fff4e6;color:#e08700;border:1px solid #ffd9a8}
+.db-d{font-weight:700;color:var(--ink)}
+.db-n{color:var(--ink3)}
+.mkt-date{margin-left:auto;font-size:11px;color:var(--ink3);font-weight:500;padding:2px 8px;border:1px solid var(--line2);border-radius:20px;background:#fafbfd}
+
+/* ---------- Responsive ---------- */
+@media (max-width:860px){
+  .rv-grid{grid-template-columns:1fr}
+  .rv-col+.rv-col{border-left:none;border-top:1px solid var(--line2)}
+}
+@media (max-width:768px){
+  body{padding-bottom:calc(76px + env(safe-area-inset-bottom))}
+  .wrap{padding:0 11px}
+  .logo h1{font-size:16.5px}
+  .hbtns .lbl{display:none}
+  .hb{padding:0 10px;min-width:44px;justify-content:center}
+  .hb.primary .lbl{display:inline}
+  .tabs{display:none}
+  .tabbar{display:block}
+  .qt th:nth-child(2),.qt td:nth-child(2){display:none}      /* hide sparkline col */
+  .qt th,.qt td{padding:10px 11px}
+  .qt td:first-child{max-width:44vw;white-space:normal}
+  .ti-act{padding:0 10px;font-size:12.5px}
+  .m-ft .btn{height:50px}
+}
+@media (max-width:400px){
+  .qt th:nth-child(3),.qt td:nth-child(3){font-size:13px}
+  .hb{height:38px}
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="toast"></div>
+<div id="modal-root"></div>
+
+<script>
+/* ===================================================================
+   全球金融盘面台  Global Markets Desk
+   单文件 · 零外链 · localStorage 持久化
+   =================================================================== */
+"use strict";
+
+/* ---------- 1. 内联 SVG 图标 ---------- */
+const I = {
+  globe:  '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9.2"/><path d="M3 12h18M12 2.8c2.6 2.6 2.6 15.8 0 18.4M12 2.8c-2.6 2.6-2.6 15.8 0 18.4"/></svg>',
+  bolt:   '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M13.2 2 4.6 13.1c-.4.5 0 1.3.7 1.3h4.6l-1.3 7.3c-.1.8.9 1.2 1.4.6l8.5-11.1c.4-.5 0-1.3-.7-1.3h-4.5l1.3-7.3c.2-.8-.9-1.2-1.4-.6z"/></svg>',
+  refresh:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.7-6.4"/><path d="M21 3.5V10h-6.5"/></svg>',
+  down:   '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7.5 10.5 12 15l4.5-4.5"/><path d="M4 20h16"/></svg>',
+  up:     '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4"/><path d="M7.5 8.5 12 4l4.5 4.5"/><path d="M4 20h16"/></svg>',
+  inbox:  '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13h4l1.6 3h6.8l1.6-3h4"/><path d="M5.3 5.4 3 13v5.2A1.8 1.8 0 0 0 4.8 20h14.4a1.8 1.8 0 0 0 1.8-1.8V13l-2.3-7.6A1.8 1.8 0 0 0 17 4H7a1.8 1.8 0 0 0-1.7 1.4z"/></svg>',
+  cloud:  '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 19a4.5 4.5 0 0 0 .5-9 6 6 0 0 0-11.6 1.7A3.8 3.8 0 0 0 6.5 19z"/><path d="M12 12v7M9 15l3 3 3-3"/></svg>',
+  plus:   '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  check:  '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6.5 9.2 17.3 4 12.1"/></svg>',
+  x:      '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>',
+  trash:  '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 6h17M9 6V4.2A1.2 1.2 0 0 1 10.2 3h3.6A1.2 1.2 0 0 1 15 4.2V6M18.2 6l-.8 13.1a1.9 1.9 0 0 1-1.9 1.8H8.5a1.9 1.9 0 0 1-1.9-1.8L5.8 6"/></svg>',
+  alert:  '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"><path d="M12 8.2v5.1M12 17h.01"/><path d="M10.3 3.9 2.5 17.4A2 2 0 0 0 4.2 20.4h15.6a2 2 0 0 0 1.7-3l-7.8-13.5a2 2 0 0 0-3.4 0z"/></svg>',
+  news:   '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M17 20H5a2 2 0 0 1-2-2V5a1 1 0 0 1 1-1h11a1 1 0 0 1 1 1v13a2 2 0 0 0 2 2 2 2 0 0 0 2-2V9h-4"/><path d="M6.5 8h7M6.5 11.5h7M6.5 15h4"/></svg>',
+  chart:  '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18"/><path d="M6 20v-6M11 20V7M16 20v-9M21 20V4"/></svg>',
+  book:   '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4.5A1.5 1.5 0 0 1 5.5 3H19v15H5.5A1.5 1.5 0 0 0 4 19.5z"/><path d="M4 19.5A1.5 1.5 0 0 1 5.5 18H19v3H5.5A1.5 1.5 0 0 1 4 19.5z"/><path d="M8 7.5h7M8 11h5"/></svg>',
+  clock:  '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5.3l3.4 2"/></svg>',
+  gear:   '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.1"/><path d="M19.6 14.6a1.6 1.6 0 0 0 .3 1.8l.1.1a1.9 1.9 0 1 1-2.7 2.7l-.1-.1a1.6 1.6 0 0 0-2.7 1.1v.3a1.9 1.9 0 1 1-3.8 0v-.2a1.6 1.6 0 0 0-2.8-1.1l-.1.1a1.9 1.9 0 1 1-2.7-2.7l.1-.1a1.6 1.6 0 0 0-1.1-2.7h-.2a1.9 1.9 0 0 1 0-3.8h.2a1.6 1.6 0 0 0 1.1-2.8l-.1-.1a1.9 1.9 0 1 1 2.7-2.7l.1.1a1.6 1.6 0 0 0 1.8.3h.1a1.6 1.6 0 0 0 1-1.5v-.2a1.9 1.9 0 1 1 3.8 0v.2a1.6 1.6 0 0 0 2.7 1.1l.1-.1a1.9 1.9 0 1 1 2.7 2.7l-.1.1a1.6 1.6 0 0 0 1.1 2.7h.2a1.9 1.9 0 0 1 0 3.8h-.2a1.6 1.6 0 0 0-1.5 1z"/></svg>',
+  radar:  '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M19.1 5.3a10 10 0 1 0 2.4 4.4"/><path d="M15.6 9.2a5 5 0 1 0 1.2 2.2"/><path d="M12 12 21 3"/></svg>',
+  edit:   '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.4 3.6a2 2 0 0 1 2.9 2.8L7.5 18.2 3.5 19.3l1.1-4z"/></svg>'
+};
+
+/* ---------- 2. 工具函数 ---------- */
+const $  = s => document.querySelector(s);
+const el = (t,c,h)=>{const n=document.createElement(t); if(c)n.className=c; if(h!=null)n.innerHTML=h; return n;};
+const esc = s => String(s==null?'':s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const uid = () => Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const pad = n => String(n).padStart(2,'0');
+const todayStr = ()=>{const d=new Date();return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;};
+const nowTs = ()=>Date.now();
+function fmtDT(ts){const d=new Date(ts);return `${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;}
+function fmtT(ts){const d=new Date(ts);return `${pad(d.getHours())}:${pad(d.getMinutes())}`;}
+function ago(ts){
+  const s=(nowTs()-ts)/1000;
+  if(s<60) return '刚刚';
+  if(s<3600) return Math.floor(s/60)+' 分钟前';
+  if(s<86400) return Math.floor(s/3600)+' 小时前';
+  return Math.floor(s/86400)+' 天前';
+}
+function num(v,d){
+  if(v==null||isNaN(v)) return '—';
+  const n=Number(v);
+  if(d==null) d = Math.abs(n)>=1000?2 : Math.abs(n)>=10?2 : Math.abs(n)>=1?4 : 6;
+  return n.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+}
+function pct(v){
+  if(v==null||isNaN(v)) return '—';
+  const n=Number(v);
+  return (n>0?'+':'')+n.toFixed(2)+'%';
+}
+function cls(v){ if(v==null||isNaN(v)||Number(v)===0) return 'flat'; return Number(v)>0?'up':'down'; }
+function toast(msg,ms){
+  const t=$('#toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(t._tm); t._tm=setTimeout(()=>t.classList.remove('show'), ms||2100);
+}
+
+/* 手写内联 SVG 迷你走势线 */
+function spark(arr,color,w,h){
+  w=w||74; h=h||24;
+  if(!arr||arr.length<2) return `<svg class="spark" width="${w}" height="${h}"></svg>`;
+  const mn=Math.min(...arr), mx=Math.max(...arr), rg=(mx-mn)||1;
+  const pts=arr.map((v,i)=>[ (i/(arr.length-1))*(w-2)+1, h-2-((v-mn)/rg)*(h-5) ]);
+  const d=pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
+  const area=d+` L${pts[pts.length-1][0].toFixed(1)} ${h} L${pts[0][0].toFixed(1)} ${h} Z`;
+  const id='g'+uid();
+  return `<svg class="spark" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
+    <defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="${color}" stop-opacity=".22"/><stop offset="100%" stop-color="${color}" stop-opacity="0"/>
+    </linearGradient></defs>
+    <path d="${area}" fill="url(#${id})"/>
+    <path d="${d}" fill="none" stroke="${color}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>`;
+}
+function upColor(v){
+  const inv=document.body.classList.contains('inv');
+  if(v==null||isNaN(v)||Number(v)===0) return '#8b97a8';
+  const isUp=Number(v)>0;
+  return (isUp!==inv)?'#e0342a':'#0e9e63';
+}
+
+/* ---------- 3. 预置示例数据（首次打开不空白） ---------- */
+function sk(base,n,vol){const a=[];let v=base;for(let i=0;i<n;i++){v=v*(1+(Math.sin(i*1.7)+Math.cos(i*.9))*vol*.004);a.push(v);}return a;}
+
+const SEED = {
+  indices:[
+    {c:'SPX',   n:'标普500',      r:'美国', p:6412.35, g:0.42,  s:sk(6380,16,1)},
+    {c:'NDX',   n:'纳斯达克100',  r:'美国', p:23180.7, g:0.78,  s:sk(23000,16,1.3)},
+    {c:'DJI',   n:'道琼斯工业',   r:'美国', p:45120.9, g:0.15,  s:sk(45000,16,.8)},
+    {c:'VIX',   n:'VIX 恐慌指数', r:'美国', p:15.82,   g:-3.41, s:sk(16.5,16,2.4)},
+    {c:'SX5E',  n:'欧洲斯托克50', r:'欧洲', p:5486.2,  g:-0.23, s:sk(5500,16,.9)},
+    {c:'DAX',   n:'德国 DAX',     r:'欧洲', p:19240.6, g:-0.31, s:sk(19300,16,1)},
+    {c:'UKX',   n:'英国富时100',  r:'欧洲', p:8632.1,  g:0.11,  s:sk(8620,16,.7)},
+    {c:'N225',  n:'日经225',      r:'亚太', p:41258.3, g:1.02,  s:sk(40900,16,1.4)},
+    {c:'HSI',   n:'恒生指数',     r:'亚太', p:24106.8, g:-0.64, s:sk(24300,16,1.5)},
+    {c:'SHCOMP',n:'上证指数',     r:'亚太', p:3452.19, g:0.28,  s:sk(3440,16,.9)},
+    {c:'SZCOMP',n:'深证成指',     r:'亚太', p:10863.4, g:0.51,  s:sk(10800,16,1.2)},
+    {c:'KOSPI', n:'韩国综合',     r:'亚太', p:2718.6,  g:0.36,  s:sk(2705,16,1.1)}
+  ],
+  commodities:[
+    {c:'CL',  n:'WTI 原油',   u:'USD/桶',  p:68.42,   g:-1.24, s:sk(69.5,16,1.8)},
+    {c:'BRN', n:'布伦特原油', u:'USD/桶',  p:71.85,   g:-1.08, s:sk(72.8,16,1.7)},
+    {c:'XAU', n:'COMEX 黄金', u:'USD/盎司',p:3418.60, g:0.86,  s:sk(3390,16,1.1)},
+    {c:'XAG', n:'COMEX 白银', u:'USD/盎司',p:39.24,   g:1.42,  s:sk(38.7,16,1.9)},
+    {c:'HG',  n:'LME 铜',     u:'USD/吨',  p:9782.0,  g:0.34,  s:sk(9750,16,1.2)},
+    {c:'NG',  n:'天然气',     u:'USD/MMBtu',p:3.128,  g:-2.15, s:sk(3.2,16,2.6)},
+    {c:'IO',  n:'铁矿石',     u:'USD/吨',  p:102.35,  g:-0.72, s:sk(103.2,16,1.4)},
+    {c:'ZS',  n:'CBOT 大豆',  u:'美分/蒲', p:1046.5,  g:0.19,  s:sk(1044,16,.9)}
+  ],
+  fx:[
+    {c:'USDCNY', n:'美元 / 离岸人民币', p:7.1820, g:0.05, d:4, s:sk(7.18,16,.6)},
+    {c:'EURUSD', n:'欧元 / 美元',       p:1.0925, g:-0.12, d:4, s:sk(1.093,16,.4)},
+    {c:'USDJPY', n:'美元 / 日元',       p:148.62, g:-0.34, d:2, s:sk(149,16,.5)},
+    {c:'GBPUSD', n:'英镑 / 美元',       p:1.2740, g:0.18, d:4, s:sk(1.273,16,.4)},
+    {c:'AUDUSD', n:'澳元 / 美元',       p:0.6618, g:0.21, d:4, s:sk(0.66,16,.5)},
+    {c:'USDCHF', n:'美元 / 瑞郎',       p:0.8840, g:0.09, d:4, s:sk(0.883,16,.4)},
+    {c:'USDCAD', n:'美元 / 加元',       p:1.3735, g:0.04, d:4, s:sk(1.373,16,.4)},
+    {c:'USDHKD', n:'美元 / 港元',       p:7.8105, g:0.01, d:4, s:sk(7.81,16,.3)}
+  ],
+  crypto:[
+    {c:'BTC', n:'比特币',  p:64250.0, g:1.84, d:2, s:sk(63000,16,1.4)},
+    {c:'ETH', n:'以太坊',  p:3142.5,  g:2.31, d:2, s:sk(3080,16,1.2)},
+    {c:'SOL', n:'Solana', p:148.2,   g:-0.92, d:2, s:sk(150,16,1.6)},
+    {c:'BNB', n:'BNB',     p:584.3,   g:0.46, d:2, s:sk(580,16,1.0)},
+    {c:'XRP', n:'瑞波币',  p:0.5284,  g:-1.15, d:4, s:sk(0.535,16,1.3)},
+    {c:'DOGE',n:'狗狗币',  p:0.1235,  g:3.42, d:4, s:sk(0.119,16,1.8)}
+  ],
+  asia:{
+    date:'2026-08-07',
+    china:{name:'中国 · 沪深', focus:true, fear:42, fearTrend:sk(38,30,5),
+      sectors:[
+        {n:'银行', chg:1.2, flow:32.5, leaders:[{n:'招商银行',chg:1.8},{n:'工商银行',chg:0.9}]},
+        {n:'半导体', chg:-2.3, flow:-18.2, leaders:[{n:'中芯国际',chg:-3.1},{n:'北方华创',chg:-1.5}]},
+        {n:'新能源', chg:0.6, flow:12.4, leaders:[{n:'宁德时代',chg:1.2},{n:'比亚迪',chg:0.4}]},
+        {n:'白酒消费', chg:-0.8, flow:-5.3, leaders:[{n:'贵州茅台',chg:-0.5}]},
+        {n:'医药', chg:0.3, flow:3.1, leaders:[{n:'恒瑞医药',chg:0.7}]}
+      ],
+      flowLabel:'北向资金', flowVal:18.6, flowUnit:'亿元',
+      note:'沪深300 窄幅震荡，半导体受外部管制消息承压，银行与高股息防御板块获避险资金流入。北向小幅净流入，情绪偏谨慎。关注本周 MLF 续作与社融数据。'},
+    hk:{name:'中国香港 · 港股', focus:true,
+      sectors:[
+        {n:'科网', chg:1.5, flow:21.3, leaders:[{n:'腾讯控股',chg:1.8},{n:'美团',chg:2.1},{n:'小米',chg:0.9}]},
+        {n:'金融', chg:0.4, flow:8.2, leaders:[{n:'友邦保险',chg:0.6}]},
+        {n:'地产', chg:-1.6, flow:-6.4, leaders:[{n:'华润置地',chg:-1.9}]},
+        {n:'消费', chg:0.7, flow:5.1, leaders:[{n:'安踏体育',chg:1.1}]}
+      ],
+      flowLabel:'南向资金', flowVal:42.3, flowUnit:'亿港元',
+      note:'恒生科技反弹，南向资金持续净流入支撑科网权重。地产链仍弱，关注后续稳地产政策窗口。'},
+    jp:{name:'日本 · 日经225', focus:false,
+      sectors:[
+        {n:'汽车', chg:0.9, flow:11.2, leaders:[{n:'丰田',chg:1.1},{n:'本田',chg:0.5}]},
+        {n:'电子', chg:1.3, flow:9.8, leaders:[{n:'索尼',chg:1.6}]},
+        {n:'金融', chg:-0.2, flow:-2.1, leaders:[{n:'三菱UFJ',chg:-0.4}]}
+      ],
+      flowLabel:'外资净流入', flowVal:6.4, flowUnit:'亿美元',
+      note:'日元升值背景下出口板块承压、科技股受益，日经高位震荡。'},
+    kr:{name:'韩国 · 韩国综指', focus:false,
+      sectors:[
+        {n:'半导体', chg:2.1, flow:15.6, leaders:[{n:'三星电子',chg:2.4},{n:'SK海力士',chg:3.0}]},
+        {n:'汽车', chg:-0.4, flow:-3.2, leaders:[{n:'现代汽车',chg:-0.6}]},
+        {n:'电池', chg:0.8, flow:4.1, leaders:[{n:'LG新能源',chg:1.0}]}
+      ],
+      flowLabel:'外资净流入', flowVal:3.2, flowUnit:'亿美元',
+      note:'存储芯片景气上行带动半导体领涨，三星、海力士获外资增持。'}
+  },
+  europe:{
+    date:'2026-08-07',
+    eu:{name:'欧洲 · 斯托克50/DAX', focus:false,
+      sectors:[
+        {n:'奢侈品', chg:-0.6, flow:-4.2, leaders:[{n:'LVMH',chg:-0.9},{n:'爱马仕',chg:0.2}]},
+        {n:'半导体设备', chg:1.4, flow:7.3, leaders:[{n:'ASML',chg:1.8}]},
+        {n:'汽车', chg:-0.3, flow:-2.8, leaders:[{n:'大众',chg:-0.5}]},
+        {n:'工业', chg:0.5, flow:3.1, leaders:[{n:'西门子',chg:0.7}]}
+      ],
+      flowLabel:'板块资金', flowVal:8.5, flowUnit:'亿欧元',
+      note:'欧洲股市分化，半导体设备受 AI 资本开支预期支撑，奢侈品受中国需求担忧拖累。'},
+    us:{name:'美国 · 美股', focus:true,
+      sectors:[
+        {n:'科技七巨头', chg:1.1, flow:52.3, leaders:[{n:'苹果',chg:0.8},{n:'微软',chg:1.2},{n:'英伟达',chg:2.1},{n:'亚马逊',chg:0.9}]},
+        {n:'半导体', chg:1.8, flow:28.6, leaders:[{n:'英伟达',chg:2.1},{n:'博通',chg:1.5}]},
+        {n:'银行', chg:-0.4, flow:-6.1, leaders:[{n:'摩根大通',chg:-0.3}]},
+        {n:'能源', chg:-1.2, flow:-9.4, leaders:[{n:'埃克森美孚',chg:-1.5}]},
+        {n:'生物科技', chg:0.6, flow:4.2, leaders:[{n:'礼来',chg:0.9}]}
+      ],
+      flowLabel:'板块轮动', flowVal:null, flowUnit:'',
+      note:'美股科技与半导体延续强势，资金明显偏好 AI 主线。能源随油价走弱，金融受长端利率上行压制。关注本周 PPI 与零售数据对降息预期的影响。'}
+  },
+  cniFear:42
+};
+
+const SEED_NEWS = [
+  {id:uid(), ts:nowTs()-1000*60*60*26, title:'美联储会议纪要：多位委员认为通胀回落速度慢于预期，年内降息节奏或再推迟',
+   level:'high', tags:['美元','美股','黄金','美债'], src:'FOMC', done:false},
+  {id:uid(), ts:nowTs()-1000*60*60*5, title:'OPEC+ 意外宣布下月增产 55 万桶/日，原油盘中一度跌逾 3%',
+   level:'high', tags:['原油','能源股','加元'], src:'路透', done:false},
+  {id:uid(), ts:nowTs()-1000*60*60*9, title:'日本央行行长讲话偏鹰，日元对美元一度升破 145 关口',
+   level:'mid', tags:['日元','日经','套息交易'], src:'BOJ', done:false},
+  {id:uid(), ts:nowTs()-1000*60*60*15, title:'美国 7 月核心 CPI 环比 +0.2%，略低于市场预期的 +0.3%',
+   level:'mid', tags:['美股','美债','美元'], src:'BLS', done:true},
+  {id:uid(), ts:nowTs()-1000*60*60*20, title:'比特币现货 ETF 单日净流入 4.2 亿美元，创近三周新高',
+   level:'low', tags:['BTC','加密'], src:'Farside', done:true}
+];
+
+function ydayStr(k){const d=new Date();d.setDate(d.getDate()-(k||1));return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;}
+
+const SEED_REVIEWS = [
+  {date:ydayStr(1),
+   opps:[{id:uid(),t:'黄金站上 3400 后回踩 3380 一线，可考虑分批建仓',done:false},
+         {id:uid(),t:'日元升值背景下，关注日经出口板块的错杀标的',done:true}],
+   risks:[{id:uid(),t:'OPEC+ 增产预期未完全定价，能源多头需减仓',done:false},
+          {id:uid(),t:'VIX 已跌至 16 下方，市场情绪偏乐观，警惕波动率反弹',done:false}],
+   note:'全球风险偏好继续修复，美股三大指数同步收涨。但商品端分化明显——贵金属强、能源弱，说明资金在做"抗通胀 + 避险"而不是"再通胀交易"。这个组合历史上通常出现在紧缩末期。'},
+  {date:ydayStr(2),
+   opps:[{id:uid(),t:'美债 10Y 收益率回落至 4.1%，久期资产存在修复空间',done:true}],
+   risks:[{id:uid(),t:'A 股成交额连续三日萎缩，缺乏增量资金',done:true}],
+   note:'典型的缩量震荡日，没有方向。观望为主。'}
+];
+
+/* ---------- 4. 存储层 ---------- */
+const K = {
+  mk:'wb_gmdesk_markets', nw:'wb_gmdesk_news', rv:'wb_gmdesk_reviews',
+  mt:'wb_gmdesk_meta', st:'wb_gmdesk_settings'
+};
+function load(k,def){
+  try{const v=localStorage.getItem(k); return v?JSON.parse(v):def;}catch(e){return def;}
+}
+function save(k,v){
+  try{localStorage.setItem(k,JSON.stringify(v)); return true;}
+  catch(e){ toast('保存失败：本地存储可能已满'); return false; }
+}
+
+let DB = {
+  markets:  load(K.mk, {indices:SEED.indices, commodities:SEED.commodities,
+                        fx:JSON.parse(JSON.stringify(SEED.fx)), crypto:JSON.parse(JSON.stringify(SEED.crypto)),
+                        asia:JSON.parse(JSON.stringify(SEED.asia)), europe:JSON.parse(JSON.stringify(SEED.europe)),
+                        cniFear:SEED.cniFear, kcache:{},
+                        srcIdx:'seed', srcCmd:'seed', tIdx:nowTs(), tCmd:nowTs()}),
+  news:     load(K.nw, SEED_NEWS),
+  reviews:  load(K.rv, SEED_REVIEWS),
+  meta:     load(K.mt, {lastBrief:null, seeded:true, nudged:0}),
+  settings: load(K.st, {inv:false, autoRefresh:true, tab:'market', newsFilter:'all', dataUrl:'./brief.json'})
+};
+function persist(part){
+  if(!part||part==='mk') save(K.mk, DB.markets);
+  if(!part||part==='nw') save(K.nw, DB.news);
+  if(!part||part==='rv') save(K.rv, DB.reviews);
+  if(!part||part==='mt') save(K.mt, DB.meta);
+  if(!part||part==='st') save(K.st, DB.settings);
+}
+if(DB.settings.inv) document.body.classList.add('inv');
+if(!DB.markets.asia) DB.markets.asia=JSON.parse(JSON.stringify(SEED.asia));
+if(!DB.markets.europe) DB.markets.europe=JSON.parse(JSON.stringify(SEED.europe));
+if(DB.markets.cniFear==null) DB.markets.cniFear=SEED.cniFear;
+if(!DB.markets.kcache) DB.markets.kcache={};
+if(!DB.markets.fx || !DB.markets.fx.length) DB.markets.fx=JSON.parse(JSON.stringify(SEED.fx));
+if(!DB.markets.crypto || !DB.markets.crypto.length) DB.markets.crypto=JSON.parse(JSON.stringify(SEED.crypto));
+
+/* ===================================================================
+   5. 实时数据层 —— 多源降级
+   汇率 / 数字货币：公开免费接口，无需 Key，支持跨域
+   全部失败 → 回落到 localStorage 缓存，并明示"缓存"状态，绝不白屏
+   =================================================================== */
+async function tryFetch(url, ms){
+  const ctrl = new AbortController();
+  const tm = setTimeout(()=>ctrl.abort(), ms||9000);
+  try{
+    const r = await fetch(url, {signal:ctrl.signal, cache:'no-store', mode:'cors'});
+    clearTimeout(tm);
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    return await r.json();
+  }catch(e){ clearTimeout(tm); throw e; }
+}
+
+/* --- 汇率：展示的货币对 --- */
+const FX_PAIRS = [
+  {c:'USDCNY', n:'美元 / 离岸人民币', k:'CNY',  inv:false, d:4},
+  {c:'EURUSD', n:'欧元 / 美元',       k:'EUR',  inv:true,  d:4},
+  {c:'USDJPY', n:'美元 / 日元',       k:'JPY',  inv:false, d:2},
+  {c:'GBPUSD', n:'英镑 / 美元',       k:'GBP',  inv:true,  d:4},
+  {c:'AUDUSD', n:'澳元 / 美元',       k:'AUD',  inv:true,  d:4},
+  {c:'USDCHF', n:'美元 / 瑞郎',       k:'CHF',  inv:false, d:4},
+  {c:'USDCAD', n:'美元 / 加元',       k:'CAD',  inv:false, d:4},
+  {c:'USDHKD', n:'美元 / 港元',       k:'HKD',  inv:false, d:4}
+];
+
+function buildFx(rates, prevRates){
+  const out=[];
+  for(const p of FX_PAIRS){
+    const r = rates[p.k]; if(r==null) continue;
+    const price = p.inv ? 1/r : r;
+    let g = null;
+    if(prevRates && prevRates[p.k]!=null){
+      const pv = p.inv ? 1/prevRates[p.k] : prevRates[p.k];
+      if(pv) g = (price-pv)/pv*100;
+    }
+    out.push({c:p.c, n:p.n, p:price, g:g, d:p.d});
+  }
+  return out;
+}
+
+async function fetchFX(){
+  /* 源 1：frankfurter（欧洲央行）— 可同时取昨日，能算出真实日涨跌 */
+  try{
+    const syms='CNY,EUR,JPY,GBP,AUD,CHF,CAD,HKD';
+    const [cur, prev] = await Promise.all([
+      tryFetch(`https://api.frankfurter.app/latest?from=USD&to=${syms}`),
+      tryFetch(`https://api.frankfurter.app/${ydayStr(4)}..?from=USD&to=${syms}`).catch(()=>null)
+    ]);
+    if(cur && cur.rates){
+      let prevRates=null;
+      if(prev && prev.rates){
+        const days=Object.keys(prev.rates).sort();
+        if(days.length>=2) prevRates = prev.rates[days[days.length-2]];
+      }
+      const list=buildFx(cur.rates, prevRates);
+      if(list.length) return {ok:true, list, src:'ECB / frankfurter', asOf:cur.date};
+    }
+  }catch(e){}
+
+  /* 源 2：open.er-api —— 用本地上次值算变化 */
+  try{
+    const j = await tryFetch('https://open.er-api.com/v6/latest/USD');
+    if(j && j.rates){
+      const cached = (DB.markets.fxRaw)||null;
+      const list = buildFx(j.rates, cached);
+      if(list.length){
+        DB.markets.fxRaw = j.rates;
+        return {ok:true, list, src:'open.er-api', asOf:(j.time_last_update_utc||'').slice(5,16)};
+      }
+    }
+  }catch(e){}
+
+  /* 源 3：currency-api 镜像 */
+  for(const u of ['https://latest.currency-api.pages.dev/v1/currencies/usd.json',
+                  'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json']){
+    try{
+      const j = await tryFetch(u);
+      const raw = j && j.usd;
+      if(raw){
+        const rates={}; for(const p of FX_PAIRS){ if(raw[p.k.toLowerCase()]!=null) rates[p.k]=raw[p.k.toLowerCase()]; }
+        const list = buildFx(rates, DB.markets.fxRaw||null);
+        if(list.length){ DB.markets.fxRaw = rates; return {ok:true, list, src:'currency-api', asOf:j.date||''}; }
+      }
+    }catch(e){}
+  }
+  return {ok:false};
+}
+
+/* --- 数字货币 --- */
+const CRYPTO = [
+  {sym:'BTC', n:'比特币',    cg:'bitcoin',     cc:'bitcoin',      bn:'BTCUSDT'},
+  {sym:'ETH', n:'以太坊',    cg:'ethereum',    cc:'ethereum',     bn:'ETHUSDT'},
+  {sym:'SOL', n:'Solana',    cg:'solana',      cc:'solana',       bn:'SOLUSDT'},
+  {sym:'BNB', n:'BNB',       cg:'binancecoin', cc:'binance-coin', bn:'BNBUSDT'},
+  {sym:'XRP', n:'瑞波币',    cg:'ripple',      cc:'xrp',          bn:'XRPUSDT'},
+  {sym:'DOGE',n:'狗狗币',    cg:'dogecoin',    cc:'dogecoin',     bn:'DOGEUSDT'}
+];
+
+async function fetchCrypto(){
+  /* 源 1：CoinGecko */
+  try{
+    const ids=CRYPTO.map(c=>c.cg).join(',');
+    const j=await tryFetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`);
+    const list=[];
+    for(const c of CRYPTO){ const d=j&&j[c.cg]; if(d&&d.usd!=null) list.push({c:c.sym,n:c.n,p:d.usd,g:d.usd_24h_change}); }
+    if(list.length>=3) return {ok:true, list, src:'CoinGecko'};
+  }catch(e){}
+
+  /* 源 2：CoinCap */
+  try{
+    const j=await tryFetch('https://api.coincap.io/v2/assets?limit=100');
+    const map={}; (j.data||[]).forEach(a=>map[a.id]=a);
+    const list=[];
+    for(const c of CRYPTO){ const d=map[c.cc]; if(d) list.push({c:c.sym,n:c.n,p:+d.priceUsd,g:+d.changePercent24Hr}); }
+    if(list.length>=3) return {ok:true, list, src:'CoinCap'};
+  }catch(e){}
+
+  /* 源 3：Binance 公共行情 */
+  for(const host of ['https://data-api.binance.vision','https://api.binance.com']){
+    try{
+      const syms=encodeURIComponent(JSON.stringify(CRYPTO.map(c=>c.bn)));
+      const j=await tryFetch(`${host}/api/v3/ticker/24hr?symbols=${syms}`);
+      const map={}; (j||[]).forEach(a=>map[a.symbol]=a);
+      const list=[];
+      for(const c of CRYPTO){ const d=map[c.bn]; if(d) list.push({c:c.sym,n:c.n,p:+d.lastPrice,g:+d.priceChangePercent}); }
+      if(list.length>=3) return {ok:true, list, src:'Binance'};
+    }catch(e){}
+  }
+  return {ok:false};
+}
+
+let SYNC = {state:'idle', fx:'', cr:'', at:0, err:0, briefAt:0};
+
+async function refreshLive(silent){
+  if(SYNC.state==='loading') return;
+  SYNC.state='loading'; renderSync();
+  if(!silent) toast('正在拉取实时行情…');
+
+  const [fx, cr] = await Promise.all([fetchFX(), fetchCrypto()]);
+  let okCount=0;
+
+  if(fx.ok){
+    DB.markets.fx = fx.list; DB.markets.srcFx = fx.src; DB.markets.tFx = nowTs();
+    SYNC.fx = fx.src; okCount++;
+  } else SYNC.fx = '';
+
+  if(cr.ok){
+    DB.markets.crypto = cr.list; DB.markets.srcCr = cr.src; DB.markets.tCr = nowTs();
+    SYNC.cr = cr.src; okCount++;
+  } else SYNC.cr = '';
+
+  SYNC.at = nowTs();
+  SYNC.state = okCount===2 ? 'ok' : okCount===1 ? 'partial' : 'fail';
+  persist('mk');
+  render();
+
+  if(!silent){
+    if(okCount===2) toast('实时行情已更新');
+    else if(okCount===1) toast('部分数据源不可达，已用缓存补齐');
+    else toast('实时源全部不可达，显示的是本地缓存数据', 3200);
+  }
+}
+
+/* ===================================================================
+   6. 「今天要处理」计算
+   =================================================================== */
+function todayItems(){
+  const items=[];
+  const today=todayStr();
+
+  /* a. 高敏感要闻未处理（>12 小时未处理 = 逾期） */
+  DB.news.filter(n=>!n.done && n.level==='high')
+    .sort((a,b)=>a.ts-b.ts)
+    .forEach(n=>{
+      const overdue = (nowTs()-n.ts) > 12*3600*1000;
+      items.push({k:'news', over:overdue, ic:'hi', icon:I.alert,
+        t:n.title, m:[(overdue?'已积压 ':'')+ago(n.ts), '高敏感', n.tags.slice(0,3).join(' · ')],
+        act:'标记已读', fn:()=>{n.done=true;persist('nw');render();toast('已处理');}});
+    });
+
+  /* b. 今日复盘未写 */
+  const rv = DB.reviews.find(r=>r.date===today);
+  if(!rv || (!rv.note && !rv.opps.length && !rv.risks.length)){
+    items.push({k:'rv', over:false, ic:'mid', icon:I.book,
+      t:'今日复盘尚未记录', m:['机会 / 风险 / 盘面小结'],
+      act:'去写', fn:()=>{go('review');}});
+  }
+
+  /* c. 昨日未完成的机会 / 风险 —— 自动顺延到今天 */
+  const past = DB.reviews.filter(r=>r.date<today).sort((a,b)=>b.date.localeCompare(a.date));
+  const carried=[];
+  past.slice(0,4).forEach(r=>{
+    r.risks.filter(x=>!x.done).forEach(x=>carried.push({r,x,type:'risk',d:r.date}));
+    r.opps.filter(x=>!x.done).forEach(x=>carried.push({r,x,type:'opp',d:r.date}));
+  });
+  carried.slice(0,5).forEach(c=>{
+    const days=Math.round((new Date(today)-new Date(c.d))/86400000);
+    items.push({k:'carry', over:days>=2, ic:c.type==='risk'?'hi':'low',
+      icon:c.type==='risk'?I.alert:I.up,
+      t:c.x.t, m:[(c.type==='risk'?'风险跟进':'机会跟进'), `${c.d} 顺延`+(days>=2?`（${days} 天未处理）`:'')],
+      act:'完成', fn:()=>{c.x.done=true;persist('rv');render();toast('已勾除');}});
+  });
+
+  /* d. 行情数据陈旧 */
+  const tFx = DB.markets.tFx||0;
+  if(nowTs()-tFx > 30*60*1000){
+    items.push({k:'sync', over:false, ic:'low', icon:I.refresh,
+      t:'实时行情已超过 30 分钟未刷新', m:[tFx?ago(tFx)+'更新':'尚未拉取过'],
+      act:'刷新', fn:()=>refreshLive(false)});
+  }
+
+  /* e. 简报数据未同步 */
+  if(DB.meta.lastBrief !== today){
+    items.push({k:'brief', over:false, ic:'low', icon:I.inbox,
+      t:'今日简报数据尚未同步（股指 / 大宗 / 亚太 / 欧美）', m:[DB.meta.lastBrief?('上次同步 '+DB.meta.lastBrief):'从未同步', '点「同步简报」或刷新页面自动拉取'],
+      act:'同步', fn:()=>fetchBrief(false)});
+  }
+  return items;
+}
+
+/* ===================================================================
+   7. 渲染
+   =================================================================== */
+function renderSync(){
+  const n=$('#syncbar'); if(!n) return;
+  const s=SYNC.state;
+  const dot = s==='loading'?'<span class="dot warn live"></span>'
+            : s==='ok'?'<span class="dot live"></span>'
+            : s==='partial'?'<span class="dot warn"></span>'
+            : s==='fail'?'<span class="dot err"></span>'
+            : '<span class="dot warn"></span>';
+  let txt;
+  if(s==='loading') txt='正在拉取实时行情…';
+  else if(s==='ok') txt=`实时源正常 · 汇率 ${SYNC.fx} · 加密 ${SYNC.cr}`;
+  else if(s==='partial') txt=`部分源可达（${SYNC.fx||SYNC.cr}），其余显示缓存`;
+  else if(s==='fail') txt='实时源不可达，当前为本地缓存数据';
+  else txt='等待首次拉取';
+  const t = DB.markets.tFx||DB.markets.tCr;
+  n.innerHTML = `${dot}<span>${esc(txt)}</span>`
+    + (t?`<span class="sep">|</span><span>行情 ${ago(t)}</span>`:'')
+    + `<span class="sep">|</span><span>简报 ${DB.meta.lastBrief||'未导入'}</span>`
+    + (SYNC.briefAt?`<span class="sep">|</span><span>同步 ${ago(SYNC.briefAt)}</span>`:'')
+    + `<span class="sep">|</span><span>亚太 ${DB.markets.asia.date||'示例'}</span>`
+    + `<span class="sep">|</span><span>欧美 ${DB.markets.europe.date||'示例'}</span>`;
+}
+
+function qtRows(list, opt){
+  opt=opt||{};
+  if(!list||!list.length) return `<tr><td colspan="4"><div class="empty">${I.inbox}<div>暂无数据，点右上角刷新或导入每日简报</div></div></td></tr>`;
+  return list.map(q=>{
+    const c=cls(q.g), col=upColor(q.g);
+    const sp = q.s&&q.s.length? spark(q.s,col) : `<svg class="spark" width="74" height="24"></svg>`;
+    const sub = q.u ? q.u : (q.r? q.r : q.c);
+    const kattr = opt.cls ? ` data-act="kline" data-cls="${opt.cls}" data-key="${esc(q.c)}" title="点击查看 K 线走势图"` : '';
+    return `<tr>
+      <td><div class="qn klink"${kattr}>${esc(q.n)}</div><div class="qc">${esc(sub)}</div></td>
+      <td>${sp}</td>
+      <td class="qp">${num(q.p, q.d)}</td>
+      <td class="qg ${c}">${pct(q.g)}</td>
+    </tr>`;
+  }).join('');
+}
+
+function marketCard(title, icon, list, pillHtml, note, cls){
+  return `<div class="card">
+    <div class="card-hd"><h3>${icon}${esc(title)}</h3><span class="grow"></span>${pillHtml}</div>
+    <table class="qt">
+      <thead><tr><th>品种</th><th style="width:84px">走势</th><th style="width:96px">最新价</th><th style="width:80px">涨跌幅</th></tr></thead>
+      <tbody>${qtRows(list, {cls})}</tbody>
+    </table>
+    ${note?`<div style="padding:9px 15px;font-size:11.5px;color:var(--ink3);border-top:1px solid var(--line2);background:#fafbfd">${note}</div>`:''}
+  </div>`;
+}
+
+function viewMarket(){
+  const m=DB.markets;
+  const pFx = m.srcFx ? `<span class="pill live">LIVE · ${esc(m.srcFx)}</span>` : `<span class="pill cache">缓存 / 待拉取</span>`;
+  const pCr = m.srcCr ? `<span class="pill live">LIVE · ${esc(m.srcCr)}</span>` : `<span class="pill cache">缓存 / 待拉取</span>`;
+  const pIdx = m.srcIdx==='seed' ? `<span class="pill">示例数据</span>` : `<span class="pill brief">简报 ${esc(m.srcIdx||'')}</span>`;
+  const pCmd = m.srcCmd==='seed' ? `<span class="pill">示例数据</span>` : `<span class="pill brief">简报 ${esc(m.srcCmd||'')}</span>`;
+
+  const byRegion = {};
+  (m.indices||[]).forEach(q=>{ (byRegion[q.r||'其他']=byRegion[q.r||'其他']||[]).push(q); });
+  const order=['美国','欧洲','亚太','其他'];
+  const idxList=[]; order.forEach(r=>{ if(byRegion[r]) idxList.push(...byRegion[r]); });
+
+  return `
+  ${marketCard('全球股指', I.chart, idxList, pIdx, m.srcIdx==='seed'
+      ? '首次打开显示的是示例快照。导入每日简报后，这里会换成当日真实收盘 / 盘中数据。点品种名看 K 线。'
+      : `数据时间：${m.tIdx?fmtDT(m.tIdx):'—'} · 点品种名看 K 线`, 'index')}
+  ${marketCard('外汇 · 主要货币对', I.globe, m.fx, pFx,
+      (m.srcFx?`来源 ${esc(m.srcFx)} · ${m.tFx?ago(m.tFx):''}更新 · 涨跌幅为相对上一交易日`
+             :'点右上角「刷新」拉取实时汇率。若网络受限，会自动降级到缓存数据。') + ' · 点品种名看 K 线', 'fx')}
+  ${marketCard('大宗商品', I.bolt, m.commodities, pCmd, (m.srcCmd==='seed'
+      ? '大宗商品无稳定的免费实时跨域接口，由每日简报注入。'
+      : `数据时间：${m.tCmd?fmtDT(m.tCmd):'—'}`) + ' · 点品种名看 K 线', 'cmd')}
+  ${marketCard('数字货币', I.radar, m.crypto, pCr,
+      (m.srcCr?`来源 ${esc(m.srcCr)} · ${m.tCr?ago(m.tCr):''}更新 · 涨跌幅为 24 小时`
+             :'点右上角「刷新」拉取实时报价。') + ' · 点品种名看 K 线', 'crypto')}
+  `;
+}
+
+/* ===================================================================
+   K 线走势图 —— 点击品种名打开
+   加密：Binance/CoinGecko 实时 OHLC；汇率：frankfurter 实时序列；
+   股指/大宗：每日简报注入的日线序列；滚轮缩放 + 拖拽平移
+   =================================================================== */
+async function fetchKline(cls, key){
+  if(cls==='crypto'){
+    const c=CRYPTO.find(x=>x.sym===key);
+    if(c){
+      for(const host of ['https://api.binance.com','https://data-api.binance.vision']){
+        try{
+          const j=await tryFetch(`${host}/api/v3/klines?symbol=${c.bn}&interval=1d&limit=160`);
+          if(Array.isArray(j)&&j.length){
+            const pts=j.map(k=>({t:k[0],o:+k[1],h:+k[2],l:+k[3],c:+k[4],v:+k[5]}));
+            return {ok:true, mode:'candle', pts, src:'Binance · 日K', sym:c.sym};
+          }
+        }catch(e){}
+      }
+      try{
+        const j=await tryFetch(`https://api.coingecko.com/api/v3/coins/${c.cg}/market_chart?vs_currency=usd&days=160`);
+        if(j&&j.prices&&j.prices.length){
+          const pts=j.prices.map(p=>({t:p[0],o:p[1],h:p[1],l:p[1],c:p[1],v:0}));
+          return {ok:true, mode:'line', pts, src:'CoinGecko · 日线', sym:c.sym};
+        }
+      }catch(e){}
+    }
+  }
+  if(cls==='fx'){
+    const base=key.slice(0,3), quote=key.slice(3);
+    try{
+      const j=await tryFetch(`https://api.frankfurter.app/${ydayStr(360)}..?from=${base}&to=${quote}`);
+      if(j&&j.rates){
+        const days=Object.keys(j.rates).sort();
+        if(days.length){
+          const pts=days.map(d=>{ const o=j.rates[d]; const val=o[quote]!=null?o[quote]:o[Object.keys(o)[0]]; return {t:Date.parse(d),o:val,h:val,l:val,c:val,v:0}; });
+          return {ok:true, mode:'line', pts, src:'frankfurter · 日线', sym:`${base}/${quote}`};
+        }
+      }
+    }catch(e){}
+  }
+  if(cls==='index'||cls==='cmd'){
+    const arr=(cls==='index'?DB.markets.indices:DB.markets.commodities).find(x=>x.c===key);
+    if(arr&&arr.s&&arr.s.length){
+      const n=arr.s.length;
+      const pts=arr.s.map((v,i)=>({t:nowTs()-(n-1-i)*86400000,o:v,h:v,l:v,c:v,v:0}));
+      return {ok:true, mode:'line', pts, src:(arr.s.length>40?'简报日线序列':'走势近似'), sym:arr.n};
+    }
+  }
+  const cache=DB.markets.kcache[cls+':'+key];
+  if(cache&&cache.length) return {ok:true, mode:cache[0].o!=null?'candle':'line', pts:cache, src:'本地缓存', sym:key};
+  return {ok:false};
+}
+
+let KL={};
+function renderKline(){
+  const box=$('#kl-canvas'); if(!box) return;
+  const {pts, mode, show, offset}=KL;
+  if(!pts||!pts.length){ box.innerHTML='<div class="empty">暂无可用数据</div>'; return; }
+  const W=Math.max(320, box.clientWidth||720), H=320, n=pts.length;
+  const cnt=Math.min(show, n);
+  let start=Math.max(0, n-cnt-offset), end=Math.min(n, n-offset);
+  if(end<=start) end=start+1;
+  const view=pts.slice(start,end);
+  let hi=-1e30, lo=1e30;
+  view.forEach(p=>{ const a=mode==='candle'?p.h:p.c, b=mode==='candle'?p.l:p.c; if(a>hi)hi=a; if(b<lo)lo=b; });
+  if(hi===lo){hi+=1;lo-=1;}
+  const pad=(hi-lo)*0.08; hi+=pad; lo-=pad;
+  const X=i=> view.length<=1?W/2 : 40 + i*(W-56)/(view.length-1);
+  const Y=v=> H-34 - (v-lo)/(hi-lo)*(H-66);
+  let svg=`<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" preserveAspectRatio="none" style="display:block">`;
+  for(let g=0;g<=4;g++){ const yy=H-34-g*(H-66)/4; const val=lo+(hi-lo)*g/4;
+    svg+=`<line x1="40" y1="${yy}" x2="${W-16}" y2="${yy}" stroke="#eef2f7"/>`;
+    svg+=`<text x="${W-12}" y="${yy+4}" text-anchor="end" font-size="10" fill="#8b97a8">${num(val, val<10?3:2)}</text>`; }
+  if(mode==='candle'){
+    const bw=Math.max(2,(W-56)/view.length*0.62);
+    view.forEach((p,i)=>{ const cx=X(i), up=p.c>=p.o, c=up?'#e0342a':'#0e9e63';
+      svg+=`<line x1="${cx}" y1="${Y(p.h)}" x2="${cx}" y2="${Y(p.l)}" stroke="${c}" stroke-width="1"/>`;
+      svg+=`<rect x="${cx-bw/2}" y="${Y(Math.max(p.o,p.c))}" width="${bw}" height="${Math.max(1,Math.abs(Y(p.o)-Y(p.c)))}" fill="${c}"/>`; });
+  }else{
+    let d=''; view.forEach((p,i)=>{ d+=(i?'L':'M')+X(i)+' '+Y(p.c)+' '; });
+    const area=`M40 ${H-34} `+view.map((p,i)=>'L'+X(i)+' '+Y(p.c)).join(' ')+` L${X(view.length-1)} ${H-34} Z`;
+    const lc=upColor(pts[n-1].c-pts[0].c);
+    svg+=`<path d="${area}" fill="${lc}" opacity="0.10"/>`;
+    svg+=`<path d="${d}" fill="none" stroke="${lc}" stroke-width="1.6"/>`;
+    const last=view[view.length-1];
+    svg+=`<circle cx="${X(view.length-1)}" cy="${Y(last.c)}" r="3" fill="${lc}"/>`;
+  }
+  const step=Math.max(1,Math.floor(view.length/5));
+  for(let i=0;i<view.length;i+=step){ const dt=new Date(view[i].t); const lbl=`${dt.getMonth()+1}/${dt.getDate()}`;
+    svg+=`<text x="${X(i)}" y="${H-14}" text-anchor="middle" font-size="9.5" fill="#8b97a8">${lbl}</text>`; }
+  svg+=`</svg>`;
+  box.innerHTML=svg;
+}
+
+async function openKline(cls, key){
+  const meta = cls==='crypto'?CRYPTO.find(c=>c.sym===key)
+            : cls==='fx'?(FX_PAIRS.find(p=>p.c===key)||{})
+            : (DB.markets.indices.find(x=>x.c===key)||DB.markets.commodities.find(x=>x.c===key)||{});
+  const title = (meta&&meta.n)?meta.n:key;
+  modal('K 线走势 · '+title, `
+    <div id="kl-info" class="kl-info">正在拉取 ${esc(title)} 的走势数据…</div>
+    <div id="kl-canvas" class="kl-canvas"></div>
+    <div class="kl-bar">
+      <button class="kl-btn" data-act="klpan" data-d="-1">← 更早</button>
+      <input type="range" id="kl-range" min="15" max="160" value="80" style="flex:1">
+      <button class="kl-btn" data-act="klpan" data-d="1">更新 →</button>
+    </div>
+    <div class="kl-hint">桌面：鼠标滚轮缩放、按住拖动平移 · 移动端：用滑块缩放、按钮平移</div>
+  `);
+  const box=$('#kl-canvas');
+  KL={pts:[], mode:'line', show:80, offset:0};
+  box.addEventListener('wheel', e=>{
+    e.preventDefault();
+    const rect=box.getBoundingClientRect(); const px=(e.clientX-rect.left)/rect.width;
+    const n=KL.pts.length; if(!n) return;
+    const delta=e.deltaY<0 ? -Math.max(5,Math.round(KL.show*0.18)) : Math.max(5,Math.round(KL.show*0.18));
+    KL.show=Math.min(160, Math.max(15, KL.show+delta));
+    const r=$('#kl-range'); if(r) r.value=KL.show;
+    renderKline();
+  }, {passive:false});
+  let drag=null;
+  box.addEventListener('mousedown', e=>{ drag={x:e.clientX, off:KL.offset}; });
+  box.addEventListener('mousemove', e=>{ if(!drag) return; const rect=box.getBoundingClientRect(); const dx=(e.clientX-drag.x)/rect.width; const n=KL.pts.length; const step=Math.round(dx*n/2); KL.offset=Math.max(0, Math.min(n-KL.show, drag.off-Math.round(step))); renderKline(); });
+  box.addEventListener('mouseup', ()=>{ drag=null; });
+  box.addEventListener('mouseleave', ()=>{ drag=null; });
+  const r=$('#kl-range'); if(r) r.addEventListener('input', ()=>{ KL.show=+r.value; renderKline(); });
+  const m=box.closest('.modal');
+  if(m) m.querySelectorAll('[data-act="klpan"]').forEach(b=>{
+    b.addEventListener('click', ()=>{ const n=KL.pts.length; const d=+b.dataset.d; const sh=Math.round(KL.show*0.3); KL.offset=Math.max(0, Math.min(n-KL.show, KL.offset+(d>0?-sh:sh))); renderKline(); });
+  });
+  const res=await fetchKline(cls, key);
+  if(res.ok){
+    KL.pts=res.pts; KL.mode=res.mode;
+    const last=res.pts[res.pts.length-1], first=res.pts[0];
+    const chg=first.c? (last.c-first.c)/first.c*100 : 0;
+    const info=$('#kl-info');
+    if(info) info.innerHTML=`<b>${esc(res.sym||title)}</b> · 最新 ${num(last.c, last.c<10?4:2)} · 区间涨跌 <span style="color:${upColor(chg)}">${pct(chg)}</span> · 源 ${esc(res.src)} · ${res.pts.length} 根`;
+    DB.markets.kcache[cls+':'+key]=res.pts.slice(-160);
+    renderKline();
+  }else{
+    const info=$('#kl-info'); if(info) info.innerHTML='⚠️ 该品种暂无可用的实时或缓存走势（股指 / 大宗需先导入每日简报；加密 / 外汇需联网）。';
+    box.innerHTML='';
+  }
+}
+
+/* ===================================================================
+   亚太 / 欧美板块
+   =================================================================== */
+function fearRing(v){
+  const pctv=Math.max(0,Math.min(100,v));
+  const rr=26, C=2*Math.PI*rr, off=C*(1-pctv/100);
+  const col = pctv>65?'#e0342a' : pctv>45?'#e08700' : pctv>25?'#1e5bbf' : '#0e9e63';
+  const label = pctv>65?'极度恐慌' : pctv>45?'恐慌' : pctv>25?'中性偏谨慎' : '平稳';
+  return `<svg width="84" height="84" viewBox="0 0 84 84">
+    <circle cx="42" cy="42" r="${rr}" fill="none" stroke="#eef2f7" stroke-width="8"/>
+    <circle cx="42" cy="42" r="${rr}" fill="none" stroke="${col}" stroke-width="8" stroke-linecap="round"
+      stroke-dasharray="${C}" stroke-dashoffset="${off}" transform="rotate(-90 42 42)"/>
+    <text x="42" y="40" text-anchor="middle" font-size="21" font-weight="700" fill="${col}">${v}</text>
+    <text x="42" y="56" text-anchor="middle" font-size="9" fill="#8b97a8">${label}</text>
+  </svg>`;
+}
+
+function dateBar(dateStr, label){
+  const today=todayStr();
+  const ds = dateStr?String(dateStr).slice(0,10):'';
+  const isToday = ds && ds===today;
+  return `<span class="pill ${isToday?'today':'stale'}">${isToday?'今日':'历史'}</span>`
+       + `<span class="db-d">${esc(ds||'示例数据')}</span>`
+       + `<span class="db-n">${esc(isToday?('今日'+(label?label+' ':'')+'数据 · 简报注入'):('历史 / 示例（'+(ds||'无')+'）· 导入每日简报更新'))}</span>`;
+}
+
+function mktCard(mk, dateStr){
+  if(!mk) return '';
+  const secHtml=(mk.sectors||[]).map(s=>{
+    const flow = s.flow==null?'<span style="color:var(--ink3)">—</span>'
+      : (s.flow>0?`<span style="color:#0e9e63">+${s.flow}</span>`:`<span style="color:#e0342a">${s.flow}</span>`);
+    const leaders=(s.leaders||[]).map(l=>`<span class="ld">${esc(l.n)} <i style="color:${upColor(l.chg)}">${pct(l.chg)}</i></span>`).join('');
+    return `<div class="sec">
+      <div class="sec-h"><span>${esc(s.n)}</span><span class="sec-chg ${cls(s.chg)}">${pct(s.chg)}</span></div>
+      <div class="sec-flow">资金 ${flow}</div>
+      <div class="sec-ld">${leaders}</div>
+    </div>`;
+  }).join('');
+  const flowHtml = mk.flowVal!=null
+    ? `<div class="mkt-flow"><span>${esc(mk.flowLabel||'资金流向')}</span><b style="color:${upColor(mk.flowVal)}">${mk.flowVal>0?'+':''}${mk.flowVal} ${esc(mk.flowUnit||'')}</b></div>`
+    : `<div class="mkt-flow"><span>${esc(mk.flowLabel||'资金流向')}</span><b style="color:var(--ink3)">—</b></div>`;
+  return `<div class="card mkt ${mk.focus?'focus':''}">
+    <div class="card-hd"><h3>${I.chart}${esc(mk.name)}</h3>${mk.focus?'<span class="pill live">重点</span>':''}${dateStr?`<span class="mkt-date">${esc(dateStr.slice(0,10))}</span>`:''}</div>
+    ${flowHtml}
+    <div class="sec-list">${secHtml}</div>
+    <div class="mkt-note">${esc(mk.note||'')}</div>
+  </div>`;
+}
+
+function viewAsia(){
+  const a=DB.markets.asia||{}, cn=a.china||{};
+  const fear = cn.fear!=null?cn.fear:DB.markets.cniFear;
+  return `
+  <div class="datebar">${dateBar(a.date,'亚太板块')}</div>
+  <div class="card fear-card">
+    <div class="card-hd"><h3>${I.alert}中国恐慌指数 · CN Fear</h3><span class="pill brief">每日更新</span></div>
+    <div class="fear-row">
+      ${fearRing(fear)}
+      <div class="fear-side">
+        <div class="fear-cap">综合沪深期权隐含波动率、涨跌家数比、杠杆资金与北向净流入测算</div>
+        ${cn.fearTrend&&cn.fearTrend.length?`<div class="fear-spark">${spark(cn.fearTrend,'#e08700')}</div>`:''}
+        <div class="fear-tip">数值越高代表市场恐慌情绪越浓，&gt;65 极度恐慌，&lt;25 平稳。导入每日简报后自动刷新。</div>
+      </div>
+    </div>
+  </div>
+  ${mktCard(cn, a.date)}
+  ${mktCard(a.hk, a.date)}
+  ${mktCard(a.jp, a.date)}
+  ${mktCard(a.kr, a.date)}
+  `;
+}
+
+function viewEurope(){
+  const e=DB.markets.europe||{};
+  return `<div class="datebar">${dateBar(e.date,'欧美板块')}</div>${mktCard(e.eu, e.date)}${mktCard(e.us, e.date)}`;
+}
+
+/* ---------- 要闻雷达 ---------- */
+const LV_TXT={high:'高敏感',mid:'关注',low:'一般'};
+function viewNews(){
+  const f=DB.settings.newsFilter||'all';
+  let list=DB.news.slice().sort((a,b)=>b.ts-a.ts);
+  if(f==='high') list=list.filter(n=>n.level==='high');
+  if(f==='todo') list=list.filter(n=>!n.done);
+  if(f==='done') list=list.filter(n=>n.done);
+
+  const cH=DB.news.filter(n=>n.level==='high'&&!n.done).length;
+  const cT=DB.news.filter(n=>!n.done).length;
+
+  const rows = list.length ? list.map(n=>`
+    <div class="ni ${n.done?'done':''}">
+      <div class="lv ${n.level}"></div>
+      <div class="ni-b">
+        <div class="ni-t">${esc(n.title)}</div>
+        <div class="ni-m">
+          <span class="lvtag ${n.level}">${LV_TXT[n.level]}</span>
+          ${n.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join('')}
+          <span>${I.clock} ${fmtDT(n.ts)}</span>
+          ${n.src?`<span>· ${esc(n.src)}</span>`:''}
+        </div>
+      </div>
+      <div class="ni-a">
+        <button class="mini ${n.done?'ok':''}" data-act="ntoggle" data-id="${n.id}" title="${n.done?'取消已读':'标记已读'}">${I.check}</button>
+        <button class="mini del" data-act="ndel" data-id="${n.id}" title="删除">${I.trash}</button>
+      </div>
+    </div>`).join('')
+    : `<div class="empty">${I.radar}<div>该筛选下没有要闻</div></div>`;
+
+  return `<div class="card">
+    <div class="card-hd">
+      <h3>${I.radar}要闻雷达</h3>
+      <span class="grow"></span>
+      ${cH?`<span class="pill" style="background:var(--hi-bg);color:var(--hi)">${cH} 条高敏感待处理</span>`:''}
+      <button class="hb" style="background:var(--brand);border-color:var(--brand)" data-act="nadd">${I.plus}<span>新增</span></button>
+    </div>
+    <div class="filters">
+      <button class="fbtn ${f==='all'?'on':''}"  data-act="nf" data-v="all">全部 ${DB.news.length}</button>
+      <button class="fbtn ${f==='todo'?'on':''}" data-act="nf" data-v="todo">待处理 ${cT}</button>
+      <button class="fbtn ${f==='high'?'on':''}" data-act="nf" data-v="high">高敏感</button>
+      <button class="fbtn ${f==='done'?'on':''}" data-act="nf" data-v="done">已处理</button>
+    </div>
+    <div class="nlist">${rows}</div>
+    <div style="padding:10px 15px;font-size:11.5px;color:var(--ink3);border-top:1px solid var(--line2);background:#fafbfd">
+      高敏感要闻在处理前会一直置顶在「今天要处理」，积压超过 12 小时会标红。
+    </div>
+  </div>`;
+}
+
+/* ---------- 每日复盘 ---------- */
+function getReview(date){
+  let r=DB.reviews.find(x=>x.date===date);
+  if(!r){ r={date, opps:[], risks:[], note:''}; DB.reviews.push(r); }
+  return r;
+}
+function rItems(arr,type){
+  if(!arr.length) return `<div style="padding:16px 15px;color:var(--ink3);font-size:13px">还没有记录，点右上角 + 添加</div>`;
+  return arr.map(x=>`<div class="rli ${x.done?'on':''}">
+      <button class="ck ${x.done?'on':''}" data-act="rtog" data-t="${type}" data-id="${x.id}">${x.done?I.check:''}</button>
+      <span class="txt">${esc(x.t)}</span>
+      <button class="x" data-act="rdel" data-t="${type}" data-id="${x.id}">${I.trash}</button>
+    </div>`).join('');
+}
+function viewReview(){
+  const d=todayStr(); const r=getReview(d);
+  const hist=DB.reviews.filter(x=>x.date!==d && (x.note||x.opps.length||x.risks.length))
+                        .sort((a,b)=>b.date.localeCompare(a.date)).slice(0,10);
+  return `
+  <div class="card">
+    <div class="card-hd"><h3>${I.book}今日复盘 · ${d}</h3><span class="grow"></span>
+      <span class="pill">机会 ${r.opps.length} · 风险 ${r.risks.length}</span></div>
+    <div class="rv-grid">
+      <div class="rv-col">
+        <div class="rv-h opp">${I.up}机会清单<span class="grow"></span>
+          <button class="addmini" data-act="radd" data-t="opps">${I.plus}</button></div>
+        ${rItems(r.opps,'opps')}
+      </div>
+      <div class="rv-col">
+        <div class="rv-h risk">${I.alert}风险清单<span class="grow"></span>
+          <button class="addmini" data-act="radd" data-t="risks">${I.plus}</button></div>
+        ${rItems(r.risks,'risks')}
+      </div>
+    </div>
+    <div style="border-top:1px solid var(--line2)">
+      <div class="rv-h">${I.edit}盘面小结</div>
+      <textarea class="note" id="rvnote" placeholder="今天全球资产怎么走的？资金在做什么交易？明天盯什么？&#10;&#10;写完自动保存。">${esc(r.note)}</textarea>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hd"><h3>${I.clock}历史复盘</h3><span class="grow"></span><span class="pill">${DB.reviews.length} 天</span></div>
+    <div class="hist">${hist.length? hist.map(x=>{
+      const un=x.risks.filter(v=>!v.done).length + x.opps.filter(v=>!v.done).length;
+      return `<div class="hi-row">
+        <div class="hi-d">${x.date}
+          <span class="cnt">机会 ${x.opps.length} · 风险 ${x.risks.length}</span>
+          ${un?`<span class="cnt" style="background:var(--hi-bg);color:var(--hi)">${un} 项未完成</span>`:''}
+        </div>
+        <div class="hi-s">${x.note?esc(x.note):'<span style="color:var(--ink3)">（无小结）</span>'}</div>
+      </div>`;}).join('') : `<div class="empty">${I.book}<div>还没有历史复盘</div></div>`}</div>
+  </div>`;
+}
+
+/* ---------- 主渲染 ---------- */
+let CURTAB = DB.settings.tab || 'market';
+function go(t){ CURTAB=t; DB.settings.tab=t; persist('st'); render(); window.scrollTo({top:0,behavior:'smooth'}); }
+
+function render(){
+  const items = todayItems();
+  const over  = items.filter(i=>i.over).length;
+  const cTodo = DB.news.filter(n=>!n.done).length;
+  const total = DB.news.length + DB.reviews.reduce((s,r)=>s+r.opps.length+r.risks.length,0);
+  const showNudge = total>=30 && (nowTs()-(DB.meta.nudged||0) > 6*3600*1000);
+
+  const todayHtml = items.length ? items.map((it,i)=>`
+    <div class="ti ${it.over?'over':''}">
+      <div class="ti-ic ${it.ic}">${it.icon}</div>
+      <div class="ti-b">
+        <div class="ti-t">${esc(it.t)}</div>
+        <div class="ti-m">${it.m.filter(Boolean).map(x=>`<span>${esc(x)}</span>`).join('<span>·</span>')}</div>
+      </div>
+      <button class="ti-act" data-act="todo" data-i="${i}">${esc(it.act)}</button>
+    </div>`).join('')
+    : `<div class="empty">${I.check}<div>今天没有待处理事项，盘面已同步、复盘已完成</div></div>`;
+
+  $('#app').innerHTML = `
+  <div class="hd"><div class="wrap">
+    <div class="hd-in">
+      <div class="logo">${I.globe}<div><h1>全球金融盘面台</h1>
+        <div class="sub">股指 · 外汇 · 大宗 · 数字货币 &nbsp;|&nbsp; 要闻雷达 · 每日复盘</div></div></div>
+      <div class="hbtns">
+        <button class="hb" data-act="refresh" title="刷新实时行情">${I.refresh}<span class="lbl">刷新</span></button>
+        <button class="hb" data-act="sync" title="同步每日简报（自动拉取）">${I.cloud}<span class="lbl">同步简报</span></button>
+        <button class="hb primary" data-act="brief" title="手动粘贴简报">${I.inbox}<span class="lbl">导入简报</span></button>
+        <button class="hb" data-act="export" title="导出 JSON 备份">${I.down}<span class="lbl">导出备份</span></button>
+        <button class="hb" data-act="import" title="导入恢复">${I.up}<span class="lbl">导入恢复</span></button>
+        <button class="hb" data-act="settings" title="设置">${I.gear}</button>
+      </div>
+    </div>
+    <div class="syncbar" id="syncbar"></div>
+  </div></div>
+
+  <div class="wrap">
+    ${showNudge?`<div class="nudge">${I.alert}<span>数据已积累 ${total} 条，建议导出一份备份留底。</span>
+      <button data-act="export">立即导出</button></div>`:''}
+
+    <div class="today">
+      <div class="today-hd">${I.bolt}<h2>今天要处理</h2>
+        <span class="badge ${items.length?'':'zero'}">${items.length}</span>
+        ${over?`<span class="pill" style="background:var(--hi-bg);color:var(--hi)">${over} 项已积压</span>`:''}
+      </div>
+      <div class="today-list">${todayHtml}</div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab ${CURTAB==='market'?'on':''}" data-act="tab" data-v="market">${I.chart}全球盘面</button>
+      <button class="tab ${CURTAB==='asia'?'on':''}" data-act="tab" data-v="asia">${I.globe}亚太板块</button>
+      <button class="tab ${CURTAB==='europe'?'on':''}" data-act="tab" data-v="europe">${I.bolt}欧美板块</button>
+      <button class="tab ${CURTAB==='news'?'on':''}"   data-act="tab" data-v="news">${I.radar}要闻雷达${cTodo?` (${cTodo})`:''}</button>
+      <button class="tab ${CURTAB==='review'?'on':''}" data-act="tab" data-v="review">${I.book}每日复盘</button>
+    </div>
+
+    <div id="body">${CURTAB==='market'?viewMarket():CURTAB==='asia'?viewAsia():CURTAB==='europe'?viewEurope():CURTAB==='news'?viewNews():viewReview()}</div>
+
+    <div class="foot">数据全部保存在本机浏览器（localStorage），不上传任何服务器<br>换设备或清缓存前，记得先导出备份</div>
+  </div>
+
+  <div class="tabbar"><div class="tabbar-in">
+    <button class="tb ${CURTAB==='market'?'on':''}" data-act="tab" data-v="market"><span class="n">${I.chart}</span>盘面</button>
+    <button class="tb ${CURTAB==='asia'?'on':''}" data-act="tab" data-v="asia"><span class="n">${I.globe}</span>亚太</button>
+    <button class="tb ${CURTAB==='europe'?'on':''}" data-act="tab" data-v="europe"><span class="n">${I.bolt}</span>欧美</button>
+    <button class="tb ${CURTAB==='news'?'on':''}"   data-act="tab" data-v="news"><span class="n">${I.radar}${cTodo?`<span class="bdg">${cTodo}</span>`:''}</span>要闻</button>
+    <button class="tb ${CURTAB==='review'?'on':''}" data-act="tab" data-v="review"><span class="n">${I.book}</span>复盘</button>
+  </div></div>`;
+
+  renderSync();
+  window._todo = items;
+
+  const nt=$('#rvnote');
+  if(nt){
+    nt.addEventListener('input',()=>{
+      const r=getReview(todayStr()); r.note=nt.value;
+      clearTimeout(nt._t); nt._t=setTimeout(()=>{persist('rv');},450);
+    });
+  }
+}
+
+/* ===================================================================
+   8. 弹窗
+   =================================================================== */
+function closeModal(){ $('#modal-root').innerHTML=''; }
+function modal(title, bodyHtml, footHtml){
+  /* 注意：这里不能给 .modal 加 stopPropagation，
+     否则弹窗内所有按钮的点击都无法冒泡到 document 上的事件总线。
+     关闭遮罩的判定改由事件总线里的 e.target===mask 完成。 */
+  $('#modal-root').innerHTML = `<div class="mask" data-act="mask">
+    <div class="modal">
+      <div class="m-hd"><h3>${esc(title)}</h3><button class="x" data-act="mclose">${I.x}</button></div>
+      <div class="m-bd">${bodyHtml}</div>
+      ${footHtml?`<div class="m-ft">${footHtml}</div>`:''}
+    </div></div>`;
+}
+
+/* --- 新增要闻 --- */
+function openNews(){
+  modal('新增要闻', `
+    <div class="fld"><label>要闻标题</label>
+      <textarea id="f-title" placeholder="例：美联储意外宣布降息 25bp，美元指数跳水"></textarea></div>
+    <div class="fld"><label>敏感度</label>
+      <div class="seg" id="f-lv">
+        <button data-v="high" class="on hi">高敏感</button>
+        <button data-v="mid">关注</button>
+        <button data-v="low">一般</button>
+      </div></div>
+    <div class="fld"><label>影响资产（逗号分隔）</label>
+      <input id="f-tags" placeholder="美元, 黄金, 美股"></div>
+    <div class="fld"><label>来源（可选）</label>
+      <input id="f-src" placeholder="路透 / 彭博 / FOMC"></div>`,
+    `<button class="btn gh" data-act="mclose">取消</button>
+     <button class="btn pri" data-act="nsave">保存</button>`);
+  const seg=$('#f-lv');
+  seg.addEventListener('click',e=>{
+    const b=e.target.closest('button'); if(!b) return;
+    [...seg.children].forEach(x=>x.className='');
+    b.className = b.dataset.v==='high'?'on hi':b.dataset.v==='mid'?'on md':'on';
+  });
+  setTimeout(()=>$('#f-title').focus(),80);
+}
+
+/* --- 新增机会 / 风险 --- */
+function openRItem(type){
+  const isR = type==='risks';
+  modal(isR?'新增风险项':'新增机会项', `
+    <div class="fld"><label>${isR?'风险描述':'机会描述'}</label>
+      <textarea id="f-t" placeholder="${isR?'例：VIX 已跌至 16 下方，警惕波动率反弹':'例：黄金回踩 3380 一线，分批建仓'}"></textarea></div>
+    <div class="hintbox">未勾选完成的条目，会自动顺延到明天的「今天要处理」，不会凭空消失。</div>`,
+    `<button class="btn gh" data-act="mclose">取消</button>
+     <button class="btn pri" data-act="rsave" data-t="${type}">保存</button>`);
+  setTimeout(()=>$('#f-t').focus(),80);
+}
+
+/* --- 导入每日简报 --- */
+function openBrief(){
+  modal('导入每日简报数据', `
+    <div class="hintbox">
+      把定时任务生成的 <b>简报 JSON</b> 整段粘贴进来，一键更新<b>全球股指</b>、<b>大宗商品</b>、<b>要闻雷达</b>。<br>
+      外汇和数字货币走实时直连，无需简报注入。<br>
+      顶层字段：<code>date</code> <code>indices</code> <code>commodities</code> <code>news</code> <code>summary</code>
+      <code>asia</code> <code>europe</code> <code>cniFear</code>（亚太/欧美板块与沪深恐慌指数，可缺省）
+    </div>
+    <div class="fld"><label>简报 JSON</label>
+      <textarea id="f-json" style="min-height:190px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px"
+        placeholder='{"date":"2026-08-10","indices":[{"c":"SPX","n":"标普500","r":"美国","p":6412.35,"g":0.42}],"commodities":[],"news":[{"title":"...","level":"high","tags":["美元"]}]}'></textarea></div>`,
+    `<button class="btn gh" data-act="mclose">取消</button>
+     <button class="btn pri" data-act="briefdo">解析并导入</button>`);
+}
+
+/* --- 设置 --- */
+function openSettings(){
+  const s=DB.settings;
+  modal('设置', `
+    <div class="fld"><label>涨跌配色</label>
+      <div class="seg" id="f-inv">
+        <button data-v="0" class="${s.inv?'':'on'}">红涨绿跌（国内习惯）</button>
+        <button data-v="1" class="${s.inv?'on':''}">绿涨红跌（欧美习惯）</button>
+      </div></div>
+    <div class="fld"><label>自动刷新实时行情</label>
+      <div class="seg" id="f-auto">
+        <button data-v="1" class="${s.autoRefresh?'on':''}">开启（每 60 秒）</button>
+        <button data-v="0" class="${s.autoRefresh?'':'on'}">关闭</button>
+      </div></div>
+    <div class="hintbox">
+      <b>数据说明</b><br>
+      · 外汇 / 数字货币：页面直连公开接口实时刷新，失败自动降级本地缓存<br>
+      · 全球股指 / 大宗商品：无稳定的免费实时跨域源，由每日简报注入<br>
+      · 所有数据仅存在本机浏览器，不上传服务器
+    </div>
+    <div class="hintbox" style="border-color:#f3c9c5;background:#fdf3f2;color:#8a2f28">
+      <b>危险操作</b><br>清空后本机所有盘面、要闻、复盘记录都会消失，且无法找回。建议先导出备份。
+    </div>`,
+    `<button class="btn dg" data-act="clearall">清空全部数据</button>
+     <button class="btn gh" data-act="clearseed">仅清空示例</button>
+     <button class="btn pri" data-act="mclose">完成</button>`);
+  [['#f-inv','inv'],['#f-auto','autoRefresh']].forEach(([sel,key])=>{
+    const n=$(sel);
+    n.addEventListener('click',e=>{
+      const b=e.target.closest('button'); if(!b) return;
+      [...n.children].forEach(x=>x.classList.remove('on')); b.classList.add('on');
+      DB.settings[key] = b.dataset.v==='1';
+      if(key==='inv') document.body.classList.toggle('inv', DB.settings.inv);
+      persist('st'); render();
+    });
+  });
+}
+
+/* ===================================================================
+   9. 备份 / 恢复 / 简报导入
+   =================================================================== */
+function doExport(){
+  const pack={type:'gmdesk-backup', version:1, exportedAt:new Date().toISOString(), data:DB};
+  const blob=new Blob([JSON.stringify(pack,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`金融盘面台备份_${todayStr()}.json`;
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},600);
+  DB.meta.nudged=nowTs(); persist('mt'); render();
+  toast('备份已导出');
+}
+
+function doImport(){
+  const inp=document.createElement('input');
+  inp.type='file'; inp.accept='.json,application/json';
+  inp.onchange=()=>{
+    const f=inp.files&&inp.files[0]; if(!f) return;
+    const rd=new FileReader();
+    rd.onload=()=>{
+      let p; try{p=JSON.parse(rd.result);}catch(e){return toast('文件不是合法 JSON');}
+      const d = p.data || p;
+      if(!d || (!d.news && !d.reviews && !d.markets)) return toast('这不是盘面台的备份文件');
+      const nOld=DB.news.length, rOld=DB.reviews.length;
+      if(d.markets)  DB.markets  = d.markets;
+      if(d.news)     DB.news     = d.news;            /* 不限条数 */
+      if(d.reviews)  DB.reviews  = d.reviews;
+      if(d.meta)     DB.meta     = Object.assign(DB.meta, d.meta);
+      if(d.settings) DB.settings = Object.assign(DB.settings, d.settings);
+      document.body.classList.toggle('inv', !!DB.settings.inv);
+      persist(); render();
+      toast(`已恢复：要闻 ${DB.news.length} 条（原 ${nOld}）· 复盘 ${DB.reviews.length} 天（原 ${rOld}）`, 3400);
+    };
+    rd.readAsText(f);
+  };
+  inp.click();
+}
+
+function applyBrief(j, silent){
+  let ni=0,nc=0,nn=0,na=0,ne=0;
+  if(Array.isArray(j.indices)&&j.indices.length){
+    DB.markets.indices = j.indices.map(x=>({
+      c:x.c||x.code||'', n:x.n||x.name||x.c||'', r:x.r||x.region||'其他',
+      p:+x.p!=null?+x.p:+x.price, g:x.g!=null?+x.g:(x.pct!=null?+x.pct:null),
+      s:Array.isArray(x.s)?x.s:null, d:x.d
+    }));
+    DB.markets.srcIdx=j.date||todayStr(); DB.markets.tIdx=nowTs(); ni=j.indices.length;
+  }
+  if(Array.isArray(j.commodities)&&j.commodities.length){
+    DB.markets.commodities = j.commodities.map(x=>({
+      c:x.c||x.code||'', n:x.n||x.name||x.c||'', u:x.u||x.unit||'',
+      p:x.p!=null?+x.p:+x.price, g:x.g!=null?+x.g:(x.pct!=null?+x.pct:null),
+      s:Array.isArray(x.s)?x.s:null, d:x.d
+    }));
+    DB.markets.srcCmd=j.date||todayStr(); DB.markets.tCmd=nowTs(); nc=j.commodities.length;
+  }
+  if(Array.isArray(j.news)&&j.news.length){
+    const seen=new Set(DB.news.map(n=>n.title));
+    j.news.forEach(x=>{
+      const title=x.title||x.t; if(!title||seen.has(title)) return;
+      DB.news.unshift({id:uid(), ts:x.ts?(typeof x.ts==='number'?x.ts:Date.parse(x.ts)||nowTs()):nowTs(),
+        title, level:(['high','mid','low'].includes(x.level)?x.level:'mid'),
+        tags:Array.isArray(x.tags)?x.tags:[], src:x.src||x.source||'简报', done:false});
+      seen.add(title); nn++;
+    });
+  }
+  if(j.summary && (j.summary.opps||j.summary.risks||j.summary.note)){
+    const r=getReview(j.date||todayStr());
+    (j.summary.opps||[]).forEach(t=>{ if(!r.opps.some(o=>o.t===t)) r.opps.push({id:uid(),t:String(t),done:false}); });
+    (j.summary.risks||[]).forEach(t=>{ if(!r.risks.some(o=>o.t===t)) r.risks.push({id:uid(),t:String(t),done:false}); });
+    if(j.summary.note && !r.note) r.note=String(j.summary.note);
+  }
+  if(j.cniFear!=null){ DB.markets.cniFear = +j.cniFear; }
+  if(j.asia && typeof j.asia==='object'){
+    for(const k of ['china','hk','jp','kr']){
+      if(j.asia[k] && typeof j.asia[k]==='object'){ DB.markets.asia[k]=j.asia[k]; na++; }
+    }
+  }
+  if(j.europe && typeof j.europe==='object'){
+    for(const k of ['eu','us']){
+      if(j.europe[k] && typeof j.europe[k]==='object'){ DB.markets.europe[k]=j.europe[k]; ne++; }
+    }
+  }
+  if((na||ne) && j.date){ DB.markets.asia.date=j.date; DB.markets.europe.date=j.date; }
+  DB.meta.lastBrief = j.date||todayStr();
+  persist();
+  if(!silent) closeModal();
+  render();
+  if(!silent) toast(`导入完成：股指 ${ni} · 大宗 ${nc} · 新要闻 ${nn}${na?` · 亚太 ${na}`:''}${ne?` · 欧美 ${ne}`:''}${j.cniFear!=null?' · 恐慌指数已更新':''}`, 3200);
+  else if(ni||nc||nn||na||ne||j.cniFear!=null) toast(`已自动同步简报（${DB.meta.lastBrief}）：股指 ${ni} · 大宗 ${nc} · 要闻 ${nn}${na?` · 亚太 ${na}`:''}${ne?` · 欧美 ${ne}`:''}`, 2600);
+  return {ni,nc,nn,na,ne};
+}
+
+function doBrief(){
+  const raw=$('#f-json').value.trim();
+  if(!raw) return toast('请先粘贴简报 JSON');
+  let j; try{ j=JSON.parse(raw); }catch(e){ return toast('JSON 解析失败：'+e.message, 3200); }
+  applyBrief(j, false);
+}
+
+/* 自动同步：定时任务把 brief.json 写到同源目录，页面打开即拉取，无需手动粘贴 */
+async function fetchBrief(silent){
+  const url = DB.settings.dataUrl || './brief.json';
+  try{
+    const r = await fetch(url, {cache:'no-store'});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const j = await r.json();
+    if(!j || typeof j!=='object') throw new Error('格式异常');
+    const res = applyBrief(j, true);
+    SYNC.briefAt = nowTs(); renderSync();
+    return res;
+  }catch(e){
+    if(!silent) toast('暂无可自动同步的简报（'+url+'）：'+(e.message||e), 3200);
+    else console.warn('brief 自动同步跳过：', e.message||e);
+    return null;
+  }
+}
+
+/* ===================================================================
+   10. 事件总线
+   =================================================================== */
+document.addEventListener('click', e=>{
+  const t=e.target.closest('[data-act]'); if(!t) return;
+  const a=t.dataset.act;
+
+  if(a==='mask'){ if(e.target===t) closeModal(); return; }
+  if(a==='mclose'){ closeModal(); return; }
+  if(a==='tab'){ go(t.dataset.v); return; }
+  if(a==='kline'){ openKline(t.dataset.cls, t.dataset.key); return; }
+  if(a==='refresh'){ refreshLive(false); return; }
+  if(a==='sync'){ fetchBrief(false); return; }
+  if(a==='export'){ doExport(); return; }
+  if(a==='import'){ doImport(); return; }
+  if(a==='brief'){ openBrief(); return; }
+  if(a==='briefdo'){ doBrief(); return; }
+  if(a==='settings'){ openSettings(); return; }
+
+  if(a==='todo'){ const it=(window._todo||[])[+t.dataset.i]; if(it) it.fn(); return; }
+
+  /* 要闻 */
+  if(a==='nadd'){ openNews(); return; }
+  if(a==='nf'){ DB.settings.newsFilter=t.dataset.v; persist('st'); render(); return; }
+  if(a==='ntoggle'){ const n=DB.news.find(x=>x.id===t.dataset.id); if(n){n.done=!n.done;persist('nw');render();} return; }
+  if(a==='ndel'){
+    const n=DB.news.find(x=>x.id===t.dataset.id); if(!n) return;
+    if(confirm('确定删除这条要闻？\n\n'+n.title)){ DB.news=DB.news.filter(x=>x.id!==n.id); persist('nw'); render(); toast('已删除'); }
+    return;
+  }
+  if(a==='nsave'){
+    const title=$('#f-title').value.trim(); if(!title) return toast('标题不能为空');
+    const lv=$('#f-lv').querySelector('.on'); 
+    DB.news.unshift({id:uid(), ts:nowTs(), title,
+      level:lv?lv.dataset.v:'mid',
+      tags:$('#f-tags').value.split(/[,，]/).map(s=>s.trim()).filter(Boolean),
+      src:$('#f-src').value.trim(), done:false});
+    persist('nw'); closeModal(); render(); toast('要闻已记录');
+    return;
+  }
+
+  /* 复盘 */
+  if(a==='radd'){ openRItem(t.dataset.t); return; }
+  if(a==='rsave'){
+    const v=$('#f-t').value.trim(); if(!v) return toast('内容不能为空');
+    getReview(todayStr())[t.dataset.t].push({id:uid(),t:v,done:false});
+    persist('rv'); closeModal(); render(); toast('已添加');
+    return;
+  }
+  if(a==='rtog'||a==='rdel'){
+    const key=t.dataset.t, id=t.dataset.id;
+    for(const r of DB.reviews){
+      const i=r[key].findIndex(x=>x.id===id);
+      if(i>-1){ if(a==='rtog') r[key][i].done=!r[key][i].done; else r[key].splice(i,1); break; }
+    }
+    persist('rv'); render(); return;
+  }
+
+  /* 清空 */
+  if(a==='clearseed'){
+    if(!confirm('清空示例数据？\n\n将移除预置的示例要闻与示例复盘，你自己录入的内容会保留。')) return;
+    const seedTitles=new Set(SEED_NEWS.map(n=>n.title));
+    DB.news=DB.news.filter(n=>!seedTitles.has(n.title));
+    const seedDates=new Set(SEED_REVIEWS.map(r=>r.date));
+    DB.reviews=DB.reviews.filter(r=>!seedDates.has(r.date));
+    DB.markets.indices=[]; DB.markets.commodities=[];
+    DB.markets.srcIdx=''; DB.markets.srcCmd='';
+    persist(); closeModal(); render(); toast('示例数据已清空');
+    return;
+  }
+  if(a==='clearall'){
+    if(!confirm('⚠️ 确定清空全部数据？\n\n盘面、要闻、复盘记录将全部删除，且无法找回。\n\n建议先点「导出备份」。')) return;
+    if(!confirm('再次确认：真的要清空吗？\n\n这是最后一次确认。')) return;
+    Object.values(K).forEach(k=>localStorage.removeItem(k));
+    DB={markets:{indices:[],commodities:[],fx:[],crypto:[],
+                 asia:JSON.parse(JSON.stringify(SEED.asia)), europe:JSON.parse(JSON.stringify(SEED.europe)),
+                 cniFear:SEED.cniFear, kcache:{}}, news:[], reviews:[],
+         meta:{lastBrief:null,seeded:false,nudged:0}, settings:{inv:false,autoRefresh:true,tab:'market',newsFilter:'all',dataUrl:'./brief.json'}};
+    document.body.classList.remove('inv');
+    persist(); closeModal(); render(); toast('已清空全部数据');
+    return;
+  }
+});
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeModal(); });
+
+/* ===================================================================
+   11. 启动
+   =================================================================== */
+render();
+refreshLive(true);
+fetchBrief(true);   // 打开即自动同步定时任务写入的简报，无需手动粘贴
+setInterval(()=>{ if(DB.settings.autoRefresh && document.visibilityState==='visible') refreshLive(true); }, 60000);
+setInterval(()=>{ renderSync(); }, 30000);
+setInterval(()=>{ if(document.visibilityState==='visible') fetchBrief(true); }, 30*60*1000);
+document.addEventListener('visibilitychange', ()=>{
+  if(document.visibilityState==='visible' && nowTs()-(DB.markets.tFx||0) > 120000) refreshLive(true);
+});
+</script>
+</body>
+</html>
